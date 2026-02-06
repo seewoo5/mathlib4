@@ -794,7 +794,7 @@ lemma valuation_bound_2d_plus_1 (p d : ℕ) (hp : p.Prime) (hd : d ≥ 1) :
     calc 2 * d + 1 ≤ 2 ^ (2 * d - 1) := two_d_plus_one_le_pow_two d hd2
       _ ≤ p ^ (2 * d - 1) := Nat.pow_le_pow_left hp.two_le _
 
-lemma pIntegral_T2 (k m p : ℕ) (_hk : k > 0) (_hm_pos : m ≥ 1) (hm_lt : m < k) (hp : p.Prime) :
+lemma pIntegral_T2 (k m p : ℕ) (hm_lt : m < k) (hp : p.Prime) :
     pIntegral p (vonStaudtIndicator (2 * m) p * ((2 * k).choose (2 * m)) * (p : ℚ) ^ (2*(k-m) - 1) /
                  (2*(k-m) + 1)) := by
   set d := k - m with hd_def
@@ -905,7 +905,7 @@ lemma choose_div_simplify (k m : ℕ) (x : ℚ) (hm_lt : m < k) :
   rw [mul_comm ((2 * k + 1).choose (2 * m) : ℚ) x, mul_div_assoc,
       mul_comm ((2 * k).choose (2 * m) : ℚ) x, mul_div_assoc, h]
 
-lemma pIntegral_case_one (k m p : ℕ) (_hk : k > 0) (_hm_pos : m ≥ 1) (hm_lt : m < k)
+lemma pIntegral_case_one (k m p : ℕ) (hm_lt : m < k)
     (hp : p.Prime) (hd : 2 * k - 2 * m ≥ 2) :
     pIntegral p (((2 * k).choose (2 * m) : ℚ) * (p : ℚ) ^ (2 * k - 2 * m - 1) /
       (2 * k - 2 * m + 1)) := by
@@ -923,7 +923,7 @@ lemma pIntegral_case_one (k m p : ℕ) (_hk : k > 0) (_hm_pos : m ≥ 1) (hm_lt 
   rw [h_eq]
   exact pIntegral_mul_nat p _ _ h_pow_integral
 
-lemma pIntegral_second_term (k m p : ℕ) (hk : k > 0) (hm_pos : m ≥ 1) (hm_lt : m < k)
+lemma pIntegral_second_term (k m p : ℕ) (hm_lt : m < k)
     (hp : p.Prime) :
     pIntegral p (vonStaudtIndicator (2 * m) p * ((2 * k + 1).choose (2 * m)) *
       (p : ℚ) ^ (2 * k - 2 * m - 1) / (2 * k + 1)) := by
@@ -931,14 +931,13 @@ lemma pIntegral_second_term (k m p : ℕ) (hk : k > 0) (hm_pos : m ≥ 1) (hm_lt
   split_ifs with h
   · simp only [one_mul]
     rw [choose_div_simplify k m _ hm_lt]
-    exact pIntegral_case_one k m p hk hm_pos hm_lt hp (by omega)
+    exact pIntegral_case_one k m p hm_lt hp (by omega)
   · simp only [zero_mul, zero_div]
     unfold pIntegral
     rw [Rat.den_zero]
     exact Nat.coprime_one_left_iff p |>.mpr trivial
 
-lemma even_term_decomposition_identity (k m p : ℕ) (_hk : k > 0)
-    (_hm_pos : m ≥ 1) (hm_lt : m < k) :
+lemma even_term_decomposition_identity (k m p : ℕ) (hm_lt : m < k) :
     (bernoulli (2 * m) * ((2 * k + 1).choose (2 * m)) *
       (p : ℚ) ^ (2 * k - 2 * m) / (2 * k + 1) : ℚ) =
     (bernoulli (2 * m) + vonStaudtIndicator (2 * m) p / p) *
@@ -959,7 +958,7 @@ lemma even_term_decomposition_identity (k m p : ℕ) (_hk : k > 0)
          C / N := by rw [h]
     _ = _ := by ring
 
-lemma pIntegral_coeff_term (k m p : ℕ) (hk : k > 0) (hm_pos : m ≥ 1) (hm_lt : m < k)
+lemma pIntegral_coeff_term (k m p : ℕ) (hm_lt : m < k)
     (hp : p.Prime) :
     pIntegral p (((2 * k + 1).choose (2 * m) : ℚ) * (p : ℚ) ^ (2 * k - 2 * m) / (2 * k + 1)) := by
   have hsimp := choose_div_simplify k m ((p : ℚ) ^ (2 * k - 2 * m)) hm_lt
@@ -976,9 +975,9 @@ lemma pIntegral_coeff_term (k m p : ℕ) (hk : k > 0) (hm_pos : m ≥ 1) (hm_lt 
   rw [hp_factor]
   apply pIntegral_mul
   · exact pIntegral_of_int p p
-  · exact pIntegral_case_one k m p hk hm_pos hm_lt hp (by omega)
+  · exact pIntegral_case_one k m p hm_lt hp (by omega)
 
-lemma pIntegral_first_term (k m p : ℕ) (hk : k > 0) (hm_pos : m ≥ 1) (hm_lt : m < k)
+lemma pIntegral_first_term (k m p : ℕ) (hm_lt : m < k)
     (hp : p.Prime)
     (ih : pIntegral p (bernoulli (2 * m) + vonStaudtIndicator (2 * m) p / p)) :
     pIntegral p ((bernoulli (2 * m) +
@@ -990,15 +989,15 @@ lemma pIntegral_first_term (k m p : ℕ) (hk : k > 0) (hm_pos : m ≥ 1) (hm_lt 
       (p : ℚ) ^ (2 * k - 2 * m) / (2 * k + 1) =
       (bernoulli (2 * m) + vonStaudtIndicator (2 * m) p / p) *
       (((2 * k + 1).choose (2 * m) : ℚ) * (p : ℚ) ^ (2 * k - 2 * m) / (2 * k + 1)) by ring]
-  exact pIntegral_mul p _ _ ih (pIntegral_coeff_term k m p hk hm_pos hm_lt hp)
+  exact pIntegral_mul p _ _ ih (pIntegral_coeff_term k m p hm_lt hp)
 
-lemma pIntegral_even_term_in_sum (k m p : ℕ) (hk : k > 0) (hm_pos : m ≥ 1) (hm_lt : m < k)
+lemma pIntegral_even_term_in_sum (k m p : ℕ) (hm_lt : m < k)
     (hp : p.Prime) (ih : pIntegral p (bernoulli (2 * m) + vonStaudtIndicator (2 * m) p / p)) :
     pIntegral p (bernoulli (2 * m) * ((2 * k + 1).choose (2 * m)) *
       (p : ℚ) ^ (2 * k - 2 * m) / (2 * k + 1)) := by
-  rw [even_term_decomposition_identity k m p hk hm_pos hm_lt]
-  exact pIntegral_sub p _ _ (pIntegral_first_term k m p hk hm_pos hm_lt hp ih)
-    (pIntegral_second_term k m p hk hm_pos hm_lt hp)
+  rw [even_term_decomposition_identity k m p hm_lt]
+  exact pIntegral_sub p _ _ (pIntegral_first_term k m p hm_lt hp ih)
+    (pIntegral_second_term k m p hm_lt hp)
 
 lemma pIntegral_remainder (k p : ℕ) (hk : k > 0) (hp : p.Prime)
     (ih : ∀ m, 0 < m → m < k → pIntegral p (bernoulli (2 * m) + vonStaudtIndicator (2 * m) p / p)) :
@@ -1015,9 +1014,9 @@ lemma pIntegral_remainder (k p : ℕ) (hk : k > 0) (hp : p.Prime)
   · set j := i + 2 with hj_def
     have hj_lt : j < 2 * k := by omega
     rcases Nat.even_or_odd j with ⟨m, hm⟩ | hodd
-    · have ⟨hm_pos, hm_lt, hj_eq⟩ : m ≥ 1 ∧ m < k ∧ j = 2 * m := by omega
+    · have ⟨_, hm_lt, hj_eq⟩ : m ≥ 1 ∧ m < k ∧ j = 2 * m := by omega
       simp only [hj_eq]
-      exact pIntegral_even_term_in_sum k m p hk hm_pos hm_lt hp (ih m (by omega) hm_lt)
+      exact pIntegral_even_term_in_sum k m p hm_lt hp (ih m (by omega) hm_lt)
     · simp only [bernoulli_eq_zero_of_odd hodd (by rcases hodd with ⟨r, hr⟩; omega),
         zero_mul, zero_div]
       unfold pIntegral
@@ -1037,7 +1036,7 @@ lemma faulhaber_top_term (k p : ℕ) :
   norm_cast
   ring_nf
 
-lemma power_sum_indicator_divisible_by_p (k p : ℕ) (_hk : k > 0) (hp : p.Prime) :
+lemma power_sum_indicator_divisible_by_p (k p : ℕ) (hp : p.Prime) :
     ∃ T : ℤ, (∑ v ∈ Finset.range p with v ≠ 0, (v : ℤ) ^ (2 * k)) +
     (if (p - 1 : ℕ) ∣ (2 * k) then 1 else 0) = p * T := by
   have h_cast : (↑((∑ v ∈ Finset.range p with v ≠ 0, (v : ℤ) ^ (2 * k)) +
@@ -1115,7 +1114,7 @@ lemma algebraic_rearrangement (k p : ℕ) (T : ℤ) (hp : p.Prime)
   field_simp [hp_ne]
   linarith
 
-lemma divisibility_to_rat_eq (k p : ℕ) (T : ℤ) (_hp : p.Prime)
+lemma divisibility_to_rat_eq (k p : ℕ) (T : ℤ)
     (hT : (∑ v ∈ Finset.range p with v ≠ 0, (v : ℤ) ^ (2 * k)) +
           (if (p - 1 : ℕ) ∣ (2 * k) then 1 else 0) = p * T) :
     (∑ v ∈ Finset.range p with v ≠ 0, (v : ℚ) ^ (2 * k)) +
@@ -1138,10 +1137,10 @@ lemma bernoulli_plus_indicator_rearrangement (k p : ℕ) (hk : k > 0) (hp : p.Pr
     ∃ T : ℤ, bernoulli (2 * k) + vonStaudtIndicator (2 * k) p / p =
       T - (∑ i ∈ Finset.range (2 * k),
         bernoulli i * ((2 * k + 1).choose i) * (p : ℚ) ^ (2 * k - i) / (2 * k + 1)) := by
-  obtain ⟨T, hT⟩ := power_sum_indicator_divisible_by_p k p hk hp
+  obtain ⟨T, hT⟩ := power_sum_indicator_divisible_by_p k p hp
   use T
   have hT' : (∑ v ∈ Finset.range p with v ≠ 0, (v : ℚ) ^ (2 * k)) + vonStaudtIndicator (2 * k) p =
-      p * T := divisibility_to_rat_eq k p T hp hT
+      p * T := divisibility_to_rat_eq k p T hT
   have hFaul : (∑ v ∈ Finset.range p with v ≠ 0, (v : ℚ) ^ (2 * k)) =
                (∑ i ∈ Finset.range (2 * k), bernoulli i * ((2 * k + 1).choose i) *
                 (p : ℚ) ^ (2 * k + 1 - i) / (2 * k + 1)) + p * bernoulli (2 * k) := by
@@ -1165,7 +1164,7 @@ lemma bernoulli_plus_indicator_coprime_p_pos (k p : ℕ) (hk : k > 0) (hp : p.Pr
       exact ih m hm_lt hm_pos
     exact pIntegral_sub p T _ hT_int hR
 
-lemma sum_other_primes_coprime_p_pos (k p : ℕ) (_hk : k > 0) (hp : p.Prime) :
+lemma sum_other_primes_coprime_p_pos (k p : ℕ) (hp : p.Prime) :
     (∑ q ∈ Finset.range (2 * k + 2) with q.Prime ∧ (q - 1) ∣ 2 * k ∧ q ≠ p,
       (1 : ℚ) / q).den.Coprime p := by
   apply Nat.Coprime.of_dvd_left
@@ -1179,7 +1178,7 @@ lemma von_staudt_coprime_all_primes_pos (k p : ℕ) (hk : k > 0) (hp : p.Prime) 
   rw [← add_assoc]
   exact Nat.Coprime.of_dvd_left (Rat.add_den_dvd _ _)
     ((bernoulli_plus_indicator_coprime_p_pos k p hk hp).mul_left
-      (sum_other_primes_coprime_p_pos k p hk hp))
+      (sum_other_primes_coprime_p_pos k p hp))
 
 theorem von_staudt_clausen (k : ℕ) :
     bernoulli (2 * k) +
