@@ -948,8 +948,7 @@ lemma valuation_three_le_one (p : ℕ) (hp : p.Prime) : (3 : ℕ).factorization 
       simp [Nat.factorization_eq_zero_of_not_dvd h]
 
 lemma two_d_plus_one_le_pow_two (d : ℕ) (hd : d ≥ 2) : 2 * d + 1 ≤ 2 ^ (2 * d - 1) := by
-  have h2d_ge_3 : 2 * d ≥ 3 := by omega
-  have := pow_two_ge_succ_of_ge_three (2 * d) h2d_ge_3
+  have := pow_two_ge_succ_of_ge_three (2 * d) (by omega)
   omega
 
 lemma valuation_bound_2d_plus_1 (p d : ℕ) (hp : p.Prime) (hd : d ≥ 1) :
@@ -1006,8 +1005,8 @@ lemma even_term_eq_T1_sub_T2 (k m p : ℕ) (hm_lt : m < k) :
                  (p : ℚ) ^ (2*(k-m)) / (2*(k-m) + 1) -
     vonStaudtIndicator (2 * m) p * ((2 * k).choose (2 * m)) *
       (p : ℚ) ^ (2*(k-m) - 1) / (2*(k-m) + 1) := by
-  have hd : k - m ≥ 1 := by omega
-  have h := core_algebraic_identity (bernoulli (2 * m)) (vonStaudtIndicator (2 * m) p) p (k - m) hd
+  have h := core_algebraic_identity (bernoulli (2 * m)) (vonStaudtIndicator (2 * m) p) p (k - m)
+    (by omega)
   set C := ((2 * k).choose (2 * m) : ℚ)
   set N := (2 * (k - m) + 1 : ℚ)
   calc bernoulli (2 * m) * C * (p : ℚ) ^ (2*(k-m)) / N
@@ -1054,8 +1053,8 @@ lemma choose_div_core (k m : ℕ) (hm_lt : m < k) :
     ((2 * k + 1).choose (2 * m) : ℚ) / (2 * k + 1) =
     ((2 * k).choose (2 * m) : ℚ) / (2 * k - 2 * m + 1) := by
   have h_denom : (2 * (k : ℚ) - 2 * m + 1) = ((2 * k - 2 * m + 1 : ℕ) : ℚ) := by
-    have h : 2 * m ≤ 2 * k := by omega
-    simp only [Nat.cast_sub h, Nat.cast_add, Nat.cast_mul, Nat.cast_ofNat, Nat.cast_one]
+    simp only [Nat.cast_sub (by omega : 2 * m ≤ 2 * k), Nat.cast_add, Nat.cast_mul,
+      Nat.cast_ofNat, Nat.cast_one]
   conv_rhs => rw [h_denom]
   have h_nat : 2 * k + 1 - 2 * m = 2 * k - 2 * m + 1 := by grind
   simp only [h_nat.symm]
@@ -1079,10 +1078,8 @@ lemma pIntegral_case_one (k m p : ℕ) (_hk : k > 0) (_hm_pos : m ≥ 1) (hm_lt 
       (p : ℚ) ^ (2 * k - 2 * m - 1) /
       (2 * k - 2 * m + 1)) := by
   set d := 2 * k - 2 * m with hd_def
-  have hd_ne_zero : d ≠ 0 := by omega
-  have hd_plus_one_ne_zero : d + 1 ≠ 0 := by omega
-  have h_exp : 2 * k - 2 * m - 1 = d - 1 := by omega
-  have hkm : 2 * m ≤ 2 * k := by omega
+  have ⟨hd_ne_zero, hd_plus_one_ne_zero, h_exp, hkm⟩ :
+      d ≠ 0 ∧ d + 1 ≠ 0 ∧ 2 * k - 2 * m - 1 = d - 1 ∧ 2 * m ≤ 2 * k := by omega
   have h_denom_rat : (2 * (k : ℚ) - 2 * m + 1) = ((d + 1 : ℕ) : ℚ) := by
     simp only [hd_def]; push_cast [Nat.cast_sub hkm]; ring
   rw [h_exp, h_denom_rat]
@@ -1103,9 +1100,8 @@ lemma pIntegral_second_term (k m p : ℕ) (hk : k > 0) (hm_pos : m ≥ 1) (hm_lt
   unfold vonStaudtIndicator
   split_ifs with h
   · simp only [one_mul]
-    have hd : 2 * k - 2 * m ≥ 2 := by omega
     rw [choose_div_simplify k m _ hm_lt]
-    exact pIntegral_case_one k m p hk hm_pos hm_lt hp hd
+    exact pIntegral_case_one k m p hk hm_pos hm_lt hp (by omega)
   · simp only [zero_mul, zero_div]
     unfold pIntegral
     rw [Rat.den_zero]
@@ -1120,8 +1116,7 @@ lemma even_term_decomposition_identity (k m p : ℕ) (_hk : k > 0)
       (p : ℚ) ^ (2 * k - 2 * m) / (2 * k + 1) -
     vonStaudtIndicator (2 * m) p * ((2 * k + 1).choose (2 * m)) *
       (p : ℚ) ^ (2 * k - 2 * m - 1) / (2 * k + 1) := by
-  have hrw : 2 * k - 2 * m = 2 * (k - m) := by omega
-  simp only [hrw]
+  simp only [show 2 * k - 2 * m = 2 * (k - m) from by omega]
   have h := core_algebraic_identity (bernoulli (2 * m))
     (vonStaudtIndicator (2 * m) p) p (k - m) (by omega)
   set C := ((2 * k + 1).choose (2 * m) : ℚ)
@@ -1139,7 +1134,6 @@ lemma pIntegral_coeff_term (k m p : ℕ) (hk : k > 0) (hm_pos : m ≥ 1) (hm_lt 
     pIntegral p (((2 * k + 1).choose (2 * m) : ℚ) * (p : ℚ) ^ (2 * k - 2 * m) / (2 * k + 1)) := by
   have hsimp := choose_div_simplify k m ((p : ℚ) ^ (2 * k - 2 * m)) hm_lt
   rw [hsimp]
-  have hd_ge_2 : 2 * k - 2 * m ≥ 2 := by omega
   have hp_factor : ((2 * k).choose (2 * m) : ℚ) * (p : ℚ) ^ (2 * k - 2 * m) / (2 * k - 2 * m + 1) =
                    (p : ℚ) * (((2 * k).choose (2 * m) : ℚ) * (p : ℚ) ^ (2 * k - 2 * m - 1) /
                    (2 * k - 2 * m + 1)) := by
@@ -1152,7 +1146,7 @@ lemma pIntegral_coeff_term (k m p : ℕ) (hk : k > 0) (hm_pos : m ≥ 1) (hm_lt 
   rw [hp_factor]
   apply pIntegral_mul
   · exact pIntegral_of_int p p
-  · exact pIntegral_case_one k m p hk hm_pos hm_lt hp hd_ge_2
+  · exact pIntegral_case_one k m p hk hm_pos hm_lt hp (by omega)
 
 lemma pIntegral_first_term (k m p : ℕ) (hk : k > 0) (hm_pos : m ≥ 1) (hm_lt : m < k)
     (hp : p.Prime)
@@ -1192,12 +1186,9 @@ lemma pIntegral_remainder (k p : ℕ) (hk : k > 0) (hp : p.Prime)
   · simp only [zero_add]
     exact pIntegral_i1_term_in_sum k p hk hp
   · set j := i + 2 with hj_def
-    have hj_ge2 : j ≥ 2 := by omega
     have hj_lt : j < 2 * k := by omega
     rcases Nat.even_or_odd j with ⟨m, hm⟩ | hodd
-    · have hm_pos : m ≥ 1 := by omega
-      have hm_lt : m < k := by omega
-      have hj_eq : j = 2 * m := by omega
+    · have ⟨hm_pos, hm_lt, hj_eq⟩ : m ≥ 1 ∧ m < k ∧ j = 2 * m := by omega
       simp only [hj_eq]
       exact pIntegral_even_term_in_sum k m p hk hm_pos hm_lt hp (ih m (by omega) hm_lt)
     · simp only [bernoulli_eq_zero_of_odd hodd (by rcases hodd with ⟨r, hr⟩; omega),
@@ -1211,8 +1202,7 @@ lemma faulhaber_top_term (k p : ℕ) :
     p * bernoulli (2 * k) := by
   have h1 : (2 * k + 1).choose (2 * k) = 2 * k + 1 := by
     rw [← Nat.choose_symm_of_eq_add (by omega : 2 * k + 1 = 1 + 2 * k), Nat.choose_one_right]
-  have h2 : (2 * k + 1 - 2 * k : ℕ) = 1 := by omega
-  rw [h1, h2, pow_one]
+  rw [h1, show (2 * k + 1 - 2 * k : ℕ) = 1 from by omega, pow_one]
   have h4 : (2 * k + 1 : ℚ) ≠ 0 := by positivity
   field_simp [h4]
   ring_nf
