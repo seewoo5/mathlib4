@@ -6,21 +6,10 @@ Authors: Johan Commelin, Kevin Buzzard
 module
 
 public import Mathlib.Algebra.BigOperators.Field
-public import Mathlib.RingTheory.PowerSeries.Inverse
-public import Mathlib.RingTheory.PowerSeries.Exp
-
-public import Mathlib.Data.Matrix.Basic
-public import Mathlib.FieldTheory.Finite.Basic
 public import Mathlib.Algebra.Field.GeomSum
-public import Mathlib.GroupTheory.SpecificGroups.Cyclic
-public import Mathlib.RingTheory.ZMod.UnitsCyclic
-public import Mathlib.Data.Nat.GCD.BigOperators
-public import Mathlib.Data.Nat.Factorization.Basic
-public import Mathlib.Data.Nat.Factorization.Defs
-public import Mathlib.Data.Rat.Lemmas
 public import Mathlib.Data.Nat.Choose.Bounds
-public import Mathlib.Tactic.Cases
-public import Mathlib.Tactic.IntervalCases
+public import Mathlib.RingTheory.PowerSeries.Exp
+public import Mathlib.RingTheory.ZMod.UnitsCyclic
 
 /-!
 # Bernoulli numbers
@@ -1354,3 +1343,5 @@ theorem von_staudt_clausen (k : ℕ) :
       (fun p hp => von_staudt_coprime_all_primes_pos k p hk hp)
 
 end vonStaudtClausen
+
+#min_imports
