@@ -868,8 +868,7 @@ lemma pIntegral_i1_term_p_eq_two (k : ℕ) (hk : k > 0) :
   have h4 : (-((2 : ℤ) ^ (2 * k - 1) : ℤ) : ℚ) / 2 =
       (-((2 : ℤ) ^ (2 * k - 2) : ℤ) : ℚ) := by
     have h8 : (2 : ℤ) ^ (2 * k - 1) = (2 : ℤ) ^ (2 * k - 2) * 2 := by
-      have h9 : (2 * k - 1 : ℕ) = (2 * k - 2 : ℕ) + 1 := by omega
-      rw [h9, pow_succ]
+      rw [show (2 * k - 1 : ℕ) = (2 * k - 2 : ℕ) + 1 from by omega, pow_succ]
     have h9 : (-((2 : ℤ) ^ (2 * k - 1) : ℤ) : ℚ) / 2 =
         (-((2 : ℤ) ^ (2 * k - 2) : ℤ) : ℚ) := by
       have h10 : (-((2 : ℤ) ^ (2 * k - 1) : ℤ) : ℚ) =
@@ -948,40 +947,29 @@ lemma pow_two_ge_succ_of_ge_three (d : ℕ) (hd : d ≥ 3) : d + 1 ≤ 2 ^ (d - 
     | refl => norm_num
     | @step m hm IH =>
       have hm : (3 : ℕ) ≤ m := hm
-      have IH := IH
       have h1 : 2 ^ (m - 1) ≥ 1 := Nat.one_le_pow _ _ (by omega)
-      have h2 : m - 1 + 1 = m := by omega
-      have h3 : 2 ^ (m - 1) * 2 = 2 ^ m := by
-        conv_rhs => rw [← h2]
-        exact (pow_succ 2 (m - 1)).symm
       calc m + 1 + 1 ≤ 2 ^ (m - 1) + 1 := by omega
         _ ≤ 2 ^ (m - 1) * 2 := by nlinarith
-        _ = 2 ^ m := h3
+        _ = 2 ^ m := by conv_rhs => rw [show m = m - 1 + 1 from by omega]; exact pow_succ ..
   exact h d hd
 
 lemma pow_ge_succ_of_ge_three (p d : ℕ) (hp : 3 ≤ p) (hd : d ≥ 2) :
     d + 1 ≤ p ^ (d - 1) := by
-  have h1 : d + 1 ≤ p ^ (d - 1) := by
-    have h2 : ∀ d : ℕ, d ≥ 2 → d + 1 ≤ p ^ (d - 1) := by
-      intro d hd
-      induction hd with
-      | refl =>
-        norm_num
-        omega
-      | @step m hm IH =>
-        have hm : (2 : ℕ) ≤ m := hm
-        have IH := IH
-        have hm1 : m - 1 + 1 = m := by omega
-        have h3 : p ^ (m - 1) * p = p ^ m := by
-          conv_rhs => rw [← hm1]
-          exact (pow_succ p (m - 1)).symm
-        calc m + 1 + 1 ≤ p ^ (m - 1) + 1 := by omega
-          _ ≤ p ^ (m - 1) * p := by
-            have : p ^ (m - 1) ≥ 1 := Nat.one_le_pow _ _ (by omega)
-            nlinarith
-          _ = p ^ m := h3
-    exact h2 d hd
-  exact h1
+  have h2 : ∀ d : ℕ, d ≥ 2 → d + 1 ≤ p ^ (d - 1) := by
+    intro d hd
+    induction hd with
+    | refl =>
+      norm_num
+      omega
+    | @step m hm IH =>
+      have hm : (2 : ℕ) ≤ m := hm
+      calc m + 1 + 1 ≤ p ^ (m - 1) + 1 := by omega
+        _ ≤ p ^ (m - 1) * p := by
+          have : p ^ (m - 1) ≥ 1 := Nat.one_le_pow _ _ (by omega)
+          nlinarith
+        _ = p ^ m := by
+          conv_rhs => rw [show m = m - 1 + 1 from by omega]; exact pow_succ ..
+  exact h2 d hd
 
 lemma pIntegral_pow_div_factor (k m p : ℕ) (_hm_pos : m ≥ 1) (hm_lt : m < k) (hp : p.Prime) :
     pIntegral p ((p : ℚ) ^ (2*(k-m)) / (2*(↑k - ↑m) + 1)) := by
@@ -1086,10 +1074,8 @@ lemma core_algebraic_identity (B I : ℚ) (p d : ℕ) (hd : d ≥ 1) :
               calc (I / p : ℚ) * (p : ℚ) ^ (2*d) = I * (p : ℚ) ^ (2*d) / p := by ring
                 _ = I * (p : ℚ) ^ (2*d - 1) := by
                   have h5 : (p : ℚ) ^ (2*d) = (p : ℚ) ^ (2*d - 1) * p := by
-                    have h7 : (2 * d : ℕ) - 1 + 1 = 2 * d := by omega
-                    calc (p : ℚ) ^ (2*d) = (p : ℚ) ^ ((2*d - 1) + 1) := by rw [h7]
-                      _ = (p : ℚ) ^ (2*d - 1) * (p : ℚ)^1 := by rw [pow_add]
-                      _ = (p : ℚ) ^ (2*d - 1) * p := by simp [pow_one]
+                    conv_lhs =>
+                      rw [show 2 * d = (2 * d - 1) + 1 from by omega, pow_succ]
                   rw [h5]
                   field_simp [h3]
             rw [h4]
@@ -1288,8 +1274,8 @@ lemma even_term_decomposition_identity (k m p : ℕ) (hk : k > 0)
             (2 * k + 1) = 0 := by
           have h10 : (p : ℚ) ^ (2 * k - 2 * m) =
               (p : ℚ) ^ (2 * k - 2 * m - 1) * (p : ℚ) := by
-            have h102 : (2 * k - 2 * m : ℕ) = (2 * k - 2 * m - 1 : ℕ) + 1 := by omega
-            conv_lhs => rw [h102, pow_succ]
+            conv_lhs =>
+              rw [show (2 * k - 2 * m : ℕ) = (2 * k - 2 * m - 1 : ℕ) + 1 from by omega, pow_succ]
           have h11 : (1 : ℚ) / p * ((2 * k + 1).choose (2 * m)) * (p : ℚ) ^ (2 * k - 2 * m) /
               (2 * k + 1) =
               (1 : ℚ) / p * ((2 * k + 1).choose (2 * m)) *
@@ -1324,8 +1310,8 @@ lemma pIntegral_coeff_term (k m p : ℕ) (hk : k > 0) (hm_pos : m ≥ 1) (hm_lt 
                    (p : ℚ) * (((2 * k).choose (2 * m) : ℚ) * (p : ℚ) ^ (2 * k - 2 * m - 1) /
                    (2 * k - 2 * m + 1)) := by
     have hpow : (p : ℚ) ^ (2 * k - 2 * m) = (p : ℚ) * (p : ℚ) ^ (2 * k - 2 * m - 1) := by
-      have heq : (2 * k - 2 * m : ℕ) = (2 * k - 2 * m - 1) + 1 := by omega
-      conv_lhs => rw [heq]
+      conv_lhs =>
+        rw [show (2 * k - 2 * m : ℕ) = (2 * k - 2 * m - 1) + 1 from by omega]
       exact pow_succ' _ _
     rw [hpow]
     ring
@@ -1468,15 +1454,7 @@ lemma remainder_div_p (k p : ℕ) (hp : p.Prime) :
       intro i hi
       have h2 : i < 2 * k := Finset.mem_range.mp hi
       have h5 : (p : ℚ) ≠ 0 := by norm_cast; exact Nat.Prime.ne_zero hp
-      have h6 : ((p : ℚ) : ℚ) ^ (2 * k + 1 - i : ℕ) =
-          (p : ℚ) ^ ((2 * k - i : ℕ) + 1 : ℕ) := by
-        have h7 : (2 * k + 1 - i : ℕ) = (2 * k - i : ℕ) + 1 := by omega
-        rw [h7]
-      rw [h6]
-      have h7 : ((p : ℚ) : ℚ) ^ ((2 * k - i : ℕ) + 1 : ℕ) =
-          (p : ℚ) ^ (2 * k - i : ℕ) * (p : ℚ) := by
-        rw [pow_succ]
-      rw [h7]
+      rw [show (2 * k + 1 - i : ℕ) = (2 * k - i : ℕ) + 1 from by omega, pow_succ]
       field_simp [h5]
     rw [Finset.sum_div]
     exact Finset.sum_congr rfl fun i hi => h1 i hi
