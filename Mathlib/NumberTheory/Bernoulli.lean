@@ -620,8 +620,7 @@ lemma pow_div_eq_pow_sub_div_ordCompl (p M N : ℕ) (hp : p.Prime) (hM : M ≠ 0
   · rw [Nat.cast_pow, div_eq_iff hpe_ne, ← pow_add, Nat.sub_add_cancel hv]
   · field_simp; simp
 
-lemma den_pow_div_dvd (p M' k : ℕ) :
-    ((p : ℚ)^k / M').den ∣ M' := by
+lemma den_pow_div_dvd (p M' k : ℕ) : ((p : ℚ)^k / M').den ∣ M' := by
   have h1 : ((p : ℚ) ^ k / M') = Rat.divInt (p ^ k : ℤ) (M' : ℤ) := by norm_cast; simp
   rw [h1]
   have h2 : ↑(Rat.divInt (p ^ k : ℤ) (M' : ℤ)).den ∣ (M' : ℤ) := by apply Rat.den_dvd
@@ -642,8 +641,7 @@ lemma pIntegral_pow_div (p M N : ℕ) (hp : p.Prime) (hM : M ≠ 0)
     den_pow_div_dvd p M' (N - M.factorization p)
   exact hM'_cop.coprime_dvd_left hdvd
 
-lemma valuation_bound (p n : ℕ) (hp : p.Prime) :
-    (n + 1).factorization p ≤ n :=
+lemma valuation_bound (p n : ℕ) (hp : p.Prime) : (n + 1).factorization p ≤ n :=
   Nat.factorization_le_of_le_pow <|
     calc n + 1 = (n + 1).choose 1 := by simp
       _ ≤ 2 ^ n := Nat.choose_succ_le_two_pow n 1
@@ -668,8 +666,7 @@ lemma pIntegral_i1_term_p_eq_two (k : ℕ) (hk : k > 0) :
   rw [h]
   norm_num [pIntegral]
 
-lemma den_neg_pow_div_two_dvd_two (k p : ℕ) :
-    (-(p : ℚ) ^ (2 * k - 1) / 2).den ∣ 2 := by
+lemma den_neg_pow_div_two_dvd_two (k p : ℕ) : (-(p : ℚ) ^ (2 * k - 1) / 2).den ∣ 2 := by
   rw [neg_div, Rat.den_neg_eq_den, ← Nat.cast_pow]
   conv_lhs => rw [show (2 : ℚ) = (2 : ℕ) from rfl, Rat.natCast_div_eq_divInt]
   have h := Rat.den_dvd (p ^ (2 * k - 1)) 2
@@ -702,12 +699,10 @@ lemma pIntegral_mul_int (p : ℕ) (x : ℚ) (z : ℤ) (hx : pIntegral p x) :
   have h2 := Nat.Coprime.coprime_dvd_left h1 hx
   aesop
 
-lemma pIntegral_mul_nat (p : ℕ) (x : ℚ) (n : ℕ) (hx : pIntegral p x) :
-    pIntegral p (n * x) :=
+lemma pIntegral_mul_nat (p : ℕ) (x : ℚ) (n : ℕ) (hx : pIntegral p x) : pIntegral p (n * x) :=
   pIntegral_mul_int p x n hx
 
-lemma valuation_bound_d_plus_1_p2_d2 :
-    (2 + 1).factorization 2 ≤ 2 - 1 := by
+lemma valuation_bound_d_plus_1_p2_d2 : (2 + 1).factorization 2 ≤ 2 - 1 := by
   simp [Nat.factorization_eq_zero_of_not_dvd (show ¬(2 ∣ 3) by decide)]
 
 lemma pow_two_ge_succ_of_ge_three (d : ℕ) (hd : d ≥ 3) : d + 1 ≤ 2 ^ (d - 1) := by
@@ -723,8 +718,7 @@ lemma pow_two_ge_succ_of_ge_three (d : ℕ) (hd : d ≥ 3) : d + 1 ≤ 2 ^ (d - 
         _ = 2 ^ m := by conv_rhs => rw [show m = m - 1 + 1 from by omega]; exact pow_succ ..
   exact h d hd
 
-lemma pow_ge_succ_of_ge_three (p d : ℕ) (hp : 3 ≤ p) (hd : d ≥ 2) :
-    d + 1 ≤ p ^ (d - 1) := by
+lemma pow_ge_succ_of_ge_three (p d : ℕ) (hp : 3 ≤ p) (hd : d ≥ 2) : d + 1 ≤ p ^ (d - 1) := by
   have h2 : ∀ d : ℕ, d ≥ 2 → d + 1 ≤ p ^ (d - 1) := by
     intro d hd
     induction hd with
@@ -905,8 +899,7 @@ lemma choose_div_simplify (k m : ℕ) (x : ℚ) (hm_lt : m < k) :
   rw [mul_comm ((2 * k + 1).choose (2 * m) : ℚ) x, mul_div_assoc,
       mul_comm ((2 * k).choose (2 * m) : ℚ) x, mul_div_assoc, h]
 
-lemma pIntegral_case_one (k m p : ℕ) (hm_lt : m < k)
-    (hp : p.Prime) (hd : 2 * k - 2 * m ≥ 2) :
+lemma pIntegral_case_one (k m p : ℕ) (hm_lt : m < k) (hp : p.Prime) (hd : 2 * k - 2 * m ≥ 2) :
     pIntegral p (((2 * k).choose (2 * m) : ℚ) * (p : ℚ) ^ (2 * k - 2 * m - 1) /
       (2 * k - 2 * m + 1)) := by
   set d := 2 * k - 2 * m with hd_def
@@ -923,8 +916,7 @@ lemma pIntegral_case_one (k m p : ℕ) (hm_lt : m < k)
   rw [h_eq]
   exact pIntegral_mul_nat p _ _ h_pow_integral
 
-lemma pIntegral_second_term (k m p : ℕ) (hm_lt : m < k)
-    (hp : p.Prime) :
+lemma pIntegral_second_term (k m p : ℕ) (hm_lt : m < k) (hp : p.Prime) :
     pIntegral p (vonStaudtIndicator (2 * m) p * ((2 * k + 1).choose (2 * m)) *
       (p : ℚ) ^ (2 * k - 2 * m - 1) / (2 * k + 1)) := by
   unfold vonStaudtIndicator
@@ -958,8 +950,7 @@ lemma even_term_decomposition_identity (k m p : ℕ) (hm_lt : m < k) :
          C / N := by rw [h]
     _ = _ := by ring
 
-lemma pIntegral_coeff_term (k m p : ℕ) (hm_lt : m < k)
-    (hp : p.Prime) :
+lemma pIntegral_coeff_term (k m p : ℕ) (hm_lt : m < k) (hp : p.Prime) :
     pIntegral p (((2 * k + 1).choose (2 * m) : ℚ) * (p : ℚ) ^ (2 * k - 2 * m) / (2 * k + 1)) := by
   have hsimp := choose_div_simplify k m ((p : ℚ) ^ (2 * k - 2 * m)) hm_lt
   rw [hsimp]
@@ -977,8 +968,7 @@ lemma pIntegral_coeff_term (k m p : ℕ) (hm_lt : m < k)
   · exact pIntegral_of_int p p
   · exact pIntegral_case_one k m p hm_lt hp (by omega)
 
-lemma pIntegral_first_term (k m p : ℕ) (hm_lt : m < k)
-    (hp : p.Prime)
+lemma pIntegral_first_term (k m p : ℕ) (hm_lt : m < k) (hp : p.Prime)
     (ih : pIntegral p (bernoulli (2 * m) + vonStaudtIndicator (2 * m) p / p)) :
     pIntegral p ((bernoulli (2 * m) +
       vonStaudtIndicator (2 * m) p / p) *
