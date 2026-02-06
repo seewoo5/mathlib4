@@ -420,8 +420,7 @@ lemma power_sum_eq_neg_one_mod_of_dvd (p l : ℕ) (hp : p.Prime) (hdvd : (p - 1)
   simp [Nat.cast_sub hp.pos]
 
 lemma sum_pow_eq_sum_units_pow (p l : ℕ) [Fact p.Prime] :
-    (∑ v ∈ Finset.range p with v ≠ 0, (v : ZMod p) ^ l) =
-    ∑ u : (ZMod p)ˣ, (u : ZMod p) ^ l := by
+    (∑ v ∈ Finset.range p with v ≠ 0, (v : ZMod p) ^ l) = ∑ u : (ZMod p)ˣ, (u : ZMod p) ^ l := by
   have hcast := cast_ne_zero_of_mem_filter p
   refine Finset.sum_bij' (fun v hv => ⟨(v : ZMod p), (v : ZMod p)⁻¹,
       mul_inv_cancel₀ (hcast v hv), inv_mul_cancel₀ (hcast v hv)⟩)
@@ -447,8 +446,7 @@ lemma sum_pow_eq_sum_units_pow (p l : ℕ) [Fact p.Prime] :
     simp
 
 lemma generator_orderOf_eq (p : ℕ) [hp : Fact p.Prime] (g : (ZMod p)ˣ)
-    (_hg : ∀ x : (ZMod p)ˣ, x ∈ Subgroup.zpowers g) :
-    orderOf g = p - 1 := by
+    (_hg : ∀ x : (ZMod p)ˣ, x ∈ Subgroup.zpowers g) : orderOf g = p - 1 := by
   have h1 : Fintype.card (Subgroup.zpowers g) = orderOf g := Fintype.card_zpowers
   have h3 : Fintype.card (ZMod p)ˣ = p - 1 := ZMod.card_units p
   aesop
@@ -580,13 +578,9 @@ lemma prod_den_coprime_p (k p : ℕ) (hp : p.Prime) :
   apply Nat.Coprime.prod_left
   intro q hq
   have h1 : q.Prime := (Finset.mem_filter.mp hq).2.1
-  have h2 : q ≠ p := (Finset.mem_filter.mp hq).2.2.2
-  have h3 : ((1 : ℚ) / q).den = q := by
-    have h5 : (q : ℕ) ≠ 0 := Nat.Prime.ne_zero h1
-    field_simp [h5]
-    simp_all
-  rw [h3]
-  exact (Nat.coprime_primes h1 hp).mpr h2
+  have h2 : ((1 : ℚ) / q).den = q := by have := Nat.Prime.ne_zero h1; simp_all
+  rw [h2]
+  exact (Nat.coprime_primes h1 hp).mpr (Finset.mem_filter.mp hq).2.2.2
 
 lemma sum_primes_eq_indicator_add_rest (k p : ℕ) (hk : k > 0) (hp : p.Prime) :
     (∑ q ∈ Finset.range (2 * k + 2) with q.Prime ∧ (q - 1) ∣ 2 * k, (1 : ℚ) / q) =
@@ -712,9 +706,7 @@ lemma pow_ge_succ_of_ge_three (p d : ℕ) (hp : 3 ≤ p) (hd : d ≥ 2) : d + 1 
   have h2 : ∀ d : ℕ, d ≥ 2 → d + 1 ≤ p ^ (d - 1) := by
     intro d hd
     induction hd with
-    | refl =>
-      norm_num
-      omega
+    | refl => norm_num; omega
     | @step m hm IH =>
       have hm : (2 : ℕ) ≤ m := hm
       calc m + 1 + 1 ≤ p ^ (m - 1) + 1 := by omega
@@ -1024,11 +1016,9 @@ lemma power_sum_indicator_divisible_by_p (k p : ℕ) (hp : p.Prime) :
 
 lemma faulhaber_split_top_term (k p : ℕ) :
     (∑ i ∈ Finset.range (2 * k + 1),
-      bernoulli i * ((2 * k + 1).choose i) * (p : ℚ) ^ (2 * k + 1 - i) /
-      (2 * k + 1)) =
+      bernoulli i * ((2 * k + 1).choose i) * (p : ℚ) ^ (2 * k + 1 - i) / (2 * k + 1)) =
     (∑ i ∈ Finset.range (2 * k), bernoulli i * ((2 * k + 1).choose i) * (p : ℚ) ^ (2 * k + 1 - i) /
-      (2 * k + 1)) +
-    bernoulli (2 * k) * ((2 * k + 1).choose (2 * k)) *
+      (2 * k + 1)) + bernoulli (2 * k) * ((2 * k + 1).choose (2 * k)) *
       (p : ℚ) ^ (2 * k + 1 - 2 * k) / (2 * k + 1) := by
   have h3 : Finset.range (2 * k + 1) = Finset.range (2 * k) ∪ {2 * k} := by
     ext x; simp [Finset.mem_range]; omega
@@ -1072,21 +1062,12 @@ lemma remainder_div_p (k p : ℕ) (hp : p.Prime) :
 lemma algebraic_rearrangement (k p : ℕ) (T : ℤ) (hp : p.Prime)
     (hT' : (∑ v ∈ Finset.range p with v ≠ 0, (v : ℚ) ^ (2 * k)) + vonStaudtIndicator (2 * k) p =
       (p : ℚ) * (T : ℚ))
-    (hFaul : (∑ v ∈ Finset.range p with v ≠ 0,
-        (v : ℚ) ^ (2 * k)) =
-             (∑ i ∈ Finset.range (2 * k), bernoulli i *
-               ((2 * k + 1).choose i) *
-               (p : ℚ) ^ (2 * k + 1 - i) /
-               (2 * k + 1)) + p * bernoulli (2 * k)) :
-    bernoulli (2 * k) + vonStaudtIndicator (2 * k) p / p =
-    T - (∑ i ∈ Finset.range (2 * k), bernoulli i *
-      ((2 * k + 1).choose i) *
-      (p : ℚ) ^ (2 * k + 1 - i) / (2 * k + 1)) / p := by
+    (hFaul : (∑ v ∈ Finset.range p with v ≠ 0, (v : ℚ) ^ (2 * k)) =
+      (∑ i ∈ Finset.range (2 * k), bernoulli i *
+      ((2 * k + 1).choose i) * (p : ℚ) ^ (2 * k + 1 - i) / (2 * k + 1)) + p * bernoulli (2 * k)) :
+    bernoulli (2 * k) + vonStaudtIndicator (2 * k) p / p = T - (∑ i ∈ Finset.range (2 * k),
+      bernoulli i * ((2 * k + 1).choose i) * (p : ℚ) ^ (2 * k + 1 - i) / (2 * k + 1)) / p := by
   have hp_ne : (p : ℚ) ≠ 0 := by exact_mod_cast hp.ne_zero
-  set S := (∑ i ∈ Finset.range (2 * k), bernoulli i * ((2 * k + 1).choose i) *
-    (p : ℚ) ^ (2 * k + 1 - i) / (2 * k + 1))
-  have key : (p : ℚ) * bernoulli (2 * k) + vonStaudtIndicator (2 * k) p =
-      (p : ℚ) * T - S := by linarith
   field_simp [hp_ne]
   linarith
 
