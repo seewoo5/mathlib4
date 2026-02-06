@@ -567,6 +567,26 @@ lemma pIntegral_sum {ι : Type*} (p : ℕ) (s : Finset ι) (f : ι → ℚ)
   Nat.Coprime.coprime_dvd_left (sum_den_dvd_prod_den s f)
     (Nat.Coprime.prod_left fun i hi => hf i hi)
 
+lemma pIntegral_of_int (p : ℕ) (z : ℤ) : pIntegral p z := by simp_all [pIntegral]
+
+lemma pIntegral_mul (p : ℕ) (x y : ℚ) (hx : pIntegral p x) (hy : pIntegral p y) :
+    pIntegral p (x * y) :=
+  Nat.Coprime.of_dvd_left (Rat.mul_den_dvd x y) (Nat.Coprime.mul_left hx hy)
+
+lemma pIntegral_mul_int (p : ℕ) (x : ℚ) (z : ℤ) (hx : pIntegral p x) :
+    pIntegral p (z * x) := by
+  have _ := Rat.mul_den_dvd z x
+  have h1 : (z * x : ℚ).den ∣ x.den := by aesop
+  have h2 := Nat.Coprime.coprime_dvd_left h1 hx
+  aesop
+
+lemma pIntegral_mul_nat (p : ℕ) (x : ℚ) (n : ℕ) (hx : pIntegral p x) : pIntegral p (n * x) :=
+  pIntegral_mul_int p x n hx
+
+lemma pIntegral_sub (p : ℕ) (x y : ℚ) (hx : pIntegral p x) (hy : pIntegral p y) :
+    pIntegral p (x - y) :=
+  Nat.Coprime.coprime_dvd_left (Rat.sub_den_dvd x y) (Nat.Coprime.mul_left hx hy)
+
 lemma prod_den_coprime_p (k p : ℕ) (hp : p.Prime) :
     (∏ q ∈ Finset.range (2 * k + 2) with q.Prime ∧ (q - 1) ∣ 2 * k ∧ q ≠ p,
       ((1 : ℚ) / q).den).Coprime p := by
@@ -601,8 +621,6 @@ lemma sum_primes_eq_indicator_add_rest (k p : ℕ) (hk : k > 0) (hp : p.Prime) :
     exact Finset.sum_congr (Finset.filter_congr fun q _ =>
       ⟨fun ⟨hpr, hd⟩ => ⟨hpr, hd, fun h => hdvd (h ▸ hd)⟩,
        fun ⟨hpr, hd, _⟩ => ⟨hpr, hd⟩⟩) fun _ _ => rfl
-
-lemma pIntegral_of_int (p : ℕ) (z : ℤ) : pIntegral p z := by simp_all [pIntegral]
 
 lemma pow_div_eq_pow_sub_div_ordCompl (p M N : ℕ) (hp : p.Prime) (hM : M ≠ 0)
     (hv : M.factorization p ≤ N) :
@@ -687,20 +705,6 @@ lemma pIntegral_i1_term (k p : ℕ) (hk : k > 0) (hp : p.Prime) :
   obtain rfl | hp2 := eq_or_ne p 2
   · exact pIntegral_i1_term_p_eq_two k hk
   · exact pIntegral_i1_term_p_odd k p hk hp hp2
-
-lemma pIntegral_mul (p : ℕ) (x y : ℚ) (hx : pIntegral p x) (hy : pIntegral p y) :
-    pIntegral p (x * y) :=
-  Nat.Coprime.of_dvd_left (Rat.mul_den_dvd x y) (Nat.Coprime.mul_left hx hy)
-
-lemma pIntegral_mul_int (p : ℕ) (x : ℚ) (z : ℤ) (hx : pIntegral p x) :
-    pIntegral p (z * x) := by
-  have _ := Rat.mul_den_dvd z x
-  have h1 : (z * x : ℚ).den ∣ x.den := by aesop
-  have h2 := Nat.Coprime.coprime_dvd_left h1 hx
-  aesop
-
-lemma pIntegral_mul_nat (p : ℕ) (x : ℚ) (n : ℕ) (hx : pIntegral p x) : pIntegral p (n * x) :=
-  pIntegral_mul_int p x n hx
 
 lemma valuation_bound_d_plus_1_p2_d2 : (2 + 1).factorization 2 ≤ 2 - 1 := by
   simp [Nat.factorization_eq_zero_of_not_dvd (show ¬(2 ∣ 3) by decide)]
@@ -842,10 +846,6 @@ lemma even_term_eq_T1_sub_T2 (k m p : ℕ) (hm_lt : m < k) :
          vonStaudtIndicator (2 * m) p * (p : ℚ) ^ (2*(k-m) - 1)) * C / N := by rw [h]
     _ = (bernoulli (2 * m) + vonStaudtIndicator (2 * m) p / p) * C * (p : ℚ) ^ (2*(k-m)) / N -
         vonStaudtIndicator (2 * m) p * C * (p : ℚ) ^ (2*(k-m) - 1) / N := by ring
-
-lemma pIntegral_sub (p : ℕ) (x y : ℚ) (hx : pIntegral p x) (hy : pIntegral p y) :
-    pIntegral p (x - y) :=
-  Nat.Coprime.coprime_dvd_left (Rat.sub_den_dvd x y) (Nat.Coprime.mul_left hx hy)
 
 theorem i1_term_forms_eq (k p : ℕ) (hk : k > 0) :
     bernoulli 1 * (2 * ↑k) * (p : ℚ) ^ (2 * k - 1) / (2 * ↑k) =
