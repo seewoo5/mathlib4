@@ -393,15 +393,6 @@ section vonStaudtClausen
 noncomputable def vonStaudtIndicator (k p : ℕ) : ℚ :=
   if (p - 1 : ℕ) ∣ k then 1 else 0
 
-lemma von_staudt_clausen_zero :
-    bernoulli (2 * 0) + ∑ p ∈ Finset.range (2 * 0 + 2) with p.Prime ∧ (p - 1) ∣ 2 * 0,
-      (1 : ℚ) / p ∈ Set.range Int.cast := by
-  have h1 : bernoulli (2 * 0) = 1 := by norm_num [bernoulli_zero]
-  have h2 : ∑ p ∈ Finset.range (2 * 0 + 2) with
-      p.Prime ∧ (p - 1) ∣ 2 * 0, (1 : ℚ) / p = 0 := by norm_num; decide
-  rw [h1, h2]
-  exact ⟨1, by norm_num⟩
-
 lemma zmod_pow_eq_one_of_dvd (p l : ℕ) (hp : p.Prime) (hdvd : (p - 1) ∣ l)
     (a : ZMod p) (ha : a ≠ 0) : a ^ l = 1 := by
   haveI : Fact p.Prime := ⟨hp⟩
@@ -1169,7 +1160,11 @@ theorem von_staudt_clausen (k : ℕ) :
     bernoulli (2 * k) + ∑ p ∈ Finset.range (2 * k + 2) with p.Prime ∧ (p - 1) ∣ 2 * k,
       (1 : ℚ) / p ∈ Set.range Int.cast := by
   rcases Nat.eq_zero_or_pos k with rfl | hk
-  · exact von_staudt_clausen_zero
+  · have h1 : bernoulli (2 * 0) = 1 := by norm_num [bernoulli_zero]
+    have h2 : ∑ p ∈ Finset.range (2 * 0 + 2) with
+        p.Prime ∧ (p - 1) ∣ 2 * 0, (1 : ℚ) / p = 0 := by norm_num; decide
+    rw [h1, h2]
+    exact ⟨1, by norm_num⟩
   · exact is_integer_of_coprime_all_primes _
       (fun p hp => von_staudt_coprime_all_primes_pos k p hk hp)
 
