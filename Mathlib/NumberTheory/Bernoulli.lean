@@ -87,8 +87,7 @@ theorem bernoulli'_spec (n : ℕ) :
   exact Finset.sum_eq_zero (fun x hx => by rw [choose_symm (le_of_lt (mem_range.1 hx)), sub_self])
 
 theorem bernoulli'_spec' (n : ℕ) :
-    (∑ k ∈ antidiagonal n,
-      ((k.1 + k.2).choose k.2 : ℚ) / (k.2 + 1) * bernoulli' k.1) = 1 := by
+    (∑ k ∈ antidiagonal n, ((k.1 + k.2).choose k.2 : ℚ) / (k.2 + 1) * bernoulli' k.1) = 1 := by
   refine ((sum_antidiagonal_eq_sum_range_succ_mk _ n).trans ?_).trans (bernoulli'_spec n)
   refine sum_congr rfl fun x hx => ?_
   simp only [add_tsub_cancel_of_le, mem_range_succ_iff.mp hx, cast_sub]
@@ -204,8 +203,7 @@ theorem bernoulli_two : bernoulli 2 = 6⁻¹ := by
 theorem bernoulli_eq_zero_of_odd {n : ℕ} (h_odd : Odd n) (hlt : 1 < n) : bernoulli n = 0 := by
   rw [bernoulli, bernoulli'_eq_zero_of_odd h_odd hlt, mul_zero]
 
-theorem bernoulli_eq_bernoulli'_of_ne_one {n : ℕ} (hn : n ≠ 1) :
-    bernoulli n = bernoulli' n := by
+theorem bernoulli_eq_bernoulli'_of_ne_one {n : ℕ} (hn : n ≠ 1) : bernoulli n = bernoulli' n := by
   cases hn.lt_or_gt with
   | inl hlt => simp [lt_one_iff.mp hlt]
   | inr hgt =>
@@ -270,8 +268,7 @@ theorem bernoulliPowerSeries_mul_exp_sub_one : bernoulliPowerSeries A * (exp A -
   have hfact : ∀ m, (m ! : ℚ) ≠ 0 := fun m => mod_cast factorial_ne_zero m
   have hite2 : ite (n.succ = 0) 1 0 = (0 : ℚ) := if_neg n.succ_ne_zero
   simp only [CharP.cast_eq_zero, zero_add, inv_one, map_one, sub_self, mul_zero]
-  rw [← map_zero (algebraMap ℚ A), ← zero_div (n.succ ! : ℚ), ← hite2,
-    ← bernoulli_spec', sum_div]
+  rw [← map_zero (algebraMap ℚ A), ← zero_div (n.succ ! : ℚ), ← hite2, ← bernoulli_spec', sum_div]
   refine congr_arg (algebraMap ℚ A) (sum_congr rfl fun x h => eq_div_of_mul_eq (hfact n.succ) ?_)
   rw [mem_antidiagonal] at h
   rw [← h, add_choose, cast_div_charZero (factorial_mul_factorial_dvd_factorial_add _ _)]
@@ -285,8 +282,7 @@ See https://proofwiki.org/wiki/Faulhaber%27s_Formula and [orosi2018faulhaber] fo
 the proof provided here. -/
 theorem sum_range_pow (n p : ℕ) :
     (∑ k ∈ range n, (k : ℚ) ^ p) =
-      ∑ i ∈ range (p + 1),
-        bernoulli i * ((p + 1).choose i) * (n : ℚ) ^ (p + 1 - i) / (p + 1) := by
+      ∑ i ∈ range (p + 1), bernoulli i * ((p + 1).choose i) * (n : ℚ) ^ (p + 1 - i) / (p + 1) := by
   have hne : ∀ m : ℕ, (m ! : ℚ) ≠ 0 := fun m => mod_cast factorial_ne_zero m
   -- compute the Cauchy product of two power series
   have h_cauchy :
@@ -302,14 +298,11 @@ theorem sum_range_pow (n p : ℕ) :
     simp only [exp_pow_eq_rescale_exp, rescale, RingHom.coe_mk]
     -- manipulate factorials and binomial coefficients
     have h : m < q + 1 := by simpa using h
-    rw [choose_eq_factorial_div_factorial h.le, eq_comm,
-      div_eq_iff (hne q.succ), succ_eq_add_one,
-      mul_assoc _ _ (q.succ ! : ℚ), mul_comm _ (q.succ ! : ℚ),
-      ← mul_assoc, div_mul_eq_mul_div]
+    rw [choose_eq_factorial_div_factorial h.le, eq_comm, div_eq_iff (hne q.succ), succ_eq_add_one,
+      mul_assoc _ _ (q.succ ! : ℚ), mul_comm _ (q.succ ! : ℚ), ← mul_assoc, div_mul_eq_mul_div]
     simp only [MonoidHom.coe_mk, OneHom.coe_mk, coeff_exp, Algebra.algebraMap_self, one_div,
       map_inv₀, map_natCast, coeff_mk]
-    rw [mul_comm ((n : ℚ) ^ (q - m + 1)),
-      ← mul_assoc _ _ ((n : ℚ) ^ (q - m + 1)), ← one_div,
+    rw [mul_comm ((n : ℚ) ^ (q - m + 1)), ← mul_assoc _ _ ((n : ℚ) ^ (q - m + 1)), ← one_div,
       mul_one_div, div_div, tsub_add_eq_add_tsub (le_of_lt_succ h), cast_div, cast_mul]
     · ring
     · exact factorial_mul_factorial_dvd_factorial h.le
@@ -322,8 +315,7 @@ theorem sum_range_pow (n p : ℕ) :
     suffices
       (mk fun p => ∑ k ∈ range n, (k : ℚ) ^ p * algebraMap ℚ ℚ p !⁻¹) =
         mk fun p =>
-          ∑ i ∈ range (p + 1),
-            bernoulli i * (p + 1).choose i * (n : ℚ) ^ (p + 1 - i) / (p + 1)! by
+          ∑ i ∈ range (p + 1), bernoulli i * (p + 1).choose i * (n : ℚ) ^ (p + 1 - i) / (p + 1)! by
       rw [← div_eq_iff (hne p), div_eq_mul_inv, sum_mul]
       rw [PowerSeries.ext_iff] at this
       simpa using this p
@@ -355,29 +347,24 @@ $$\sum_{k=1}^{n} k^p = \sum_{i=0}^p (-1)^iB_i\binom{p+1}{i}\frac{n^{p+1-i}}{p+1}
 Deduced from `sum_range_pow`. -/
 theorem sum_Ico_pow (n p : ℕ) :
     (∑ k ∈ Ico 1 (n + 1), (k : ℚ) ^ p) =
-      ∑ i ∈ range (p + 1),
-        bernoulli' i * (p + 1).choose i * (n : ℚ) ^ (p + 1 - i) / (p + 1) := by
+      ∑ i ∈ range (p + 1), bernoulli' i * (p + 1).choose i * (n : ℚ) ^ (p + 1 - i) / (p + 1) := by
   rw [← Nat.cast_succ]
   -- dispose of the trivial case
   cases p with | zero => simp | succ p =>
   let f i := bernoulli i * p.succ.succ.choose i * (n : ℚ) ^ (p.succ.succ - i) / p.succ.succ
   let f' i := bernoulli' i * p.succ.succ.choose i * (n : ℚ) ^ (p.succ.succ - i) / p.succ.succ
-  suffices (∑ k ∈ Ico 1 n.succ, (k : ℚ) ^ p.succ) =
-      ∑ i ∈ range p.succ.succ, f' i by convert this
+  suffices (∑ k ∈ Ico 1 n.succ, (k : ℚ) ^ p.succ) = ∑ i ∈ range p.succ.succ, f' i by convert this
   -- prove some algebraic facts that will make things easier for us later on
   have hle := Nat.le_add_left 1 n
   have hne : (p + 1 + 1 : ℚ) ≠ 0 := by norm_cast
-  have h1 : ∀ r : ℚ,
-      r * (p + 1 + 1) * (n : ℚ) ^ p.succ / (p + 1 + 1 : ℚ) = r * (n : ℚ) ^ p.succ :=
+  have h1 : ∀ r : ℚ, r * (p + 1 + 1) * (n : ℚ) ^ p.succ / (p + 1 + 1 : ℚ) = r * (n : ℚ) ^ p.succ :=
       fun r => by rw [mul_div_right_comm, mul_div_cancel_right₀ _ hne]
   have h2 : f 1 + (n : ℚ) ^ p.succ = 1 / 2 * (n : ℚ) ^ p.succ := by
     simp_rw [f, bernoulli_one, choose_one_right, succ_sub_succ_eq_sub, cast_succ, tsub_zero, h1]
     ring
   have :
-    (∑ i ∈ range p, bernoulli (i + 2) * (p + 2).choose (i + 2) *
-        (n : ℚ) ^ (p - i) / ↑(p + 2)) =
-      ∑ i ∈ range p, bernoulli' (i + 2) * (p + 2).choose (i + 2) *
-        (n : ℚ) ^ (p - i) / ↑(p + 2) :=
+    (∑ i ∈ range p, bernoulli (i + 2) * (p + 2).choose (i + 2) * (n : ℚ) ^ (p - i) / ↑(p + 2)) =
+      ∑ i ∈ range p, bernoulli' (i + 2) * (p + 2).choose (i + 2) * (n : ℚ) ^ (p - i) / ↑(p + 2) :=
     sum_congr rfl fun i _ => by rw [bernoulli_eq_bernoulli'_of_ne_one (succ_succ_ne_one i)]
   calc
     (-- replace sum over `Ico` with sum over `range` and simplify
