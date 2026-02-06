@@ -584,122 +584,22 @@ lemma sum_primes_eq_indicator_add_rest (k p : ℕ) (hk : k > 0) (hp : p.Prime) :
     (∑ q ∈ Finset.range (2 * k + 2) with q.Prime ∧ (q - 1) ∣ 2 * k, (1 : ℚ) / q) =
     vonStaudtIndicator (2 * k) p / p + ∑ q ∈ Finset.range (2 * k + 2) with
       q.Prime ∧ (q - 1) ∣ 2 * k ∧ q ≠ p, (1 : ℚ) / q := by
-  have h3 : ∑ q ∈ Finset.range (2 * k + 2) with q.Prime ∧ (q - 1) ∣ 2 * k, (1 : ℚ) / q =
-    (if (p.Prime ∧ (p - 1) ∣ 2 * k ∧ p < 2 * k + 2) then (1 : ℚ) / p else 0) +
-      ∑ q ∈ Finset.range (2 * k + 2) with q.Prime ∧ (q - 1) ∣ 2 * k ∧ q ≠ p, (1 : ℚ) / q := by
-    have h4 : (∑ q ∈ Finset.range (2 * k + 2) with q.Prime ∧ (q - 1) ∣ 2 * k, (1 : ℚ) / q) =
-      ∑ q ∈ Finset.filter (fun q => q.Prime ∧ (q - 1) ∣ 2 * k)
-        (Finset.range (2 * k + 2)), (1 : ℚ) / q := rfl
-    rw [h4]
-    have h5 : p < 2 * k + 2 ∨ ¬(p.Prime ∧ (p - 1) ∣ 2 * k ∧ p < 2 * k + 2) := by
-      by_cases h51 : p < 2 * k + 2
-      · exact Or.inl h51
-      · exact Or.inr (by tauto)
-    cases h5 with
-    | inl h5 =>
-      have h7 : p < 2 * k + 2 := h5
-      have h8 : p ∈ Finset.filter (fun q => q.Prime ∧ (q - 1) ∣ 2 * k)
-          (Finset.range (2 * k + 2)) ↔ p.Prime ∧ (p - 1) ∣ 2 * k := by
-        simp [Finset.mem_filter, Finset.mem_range]
-        tauto
-      have h9 : (if (p.Prime ∧ (p - 1) ∣ 2 * k ∧ p < 2 * k + 2) then (1 : ℚ) / p else 0) =
-          (if (p.Prime ∧ (p - 1) ∣ 2 * k) then (1 : ℚ) / p else 0) := by
-        have h10 : (p.Prime ∧ (p - 1) ∣ 2 * k ∧ p < 2 * k + 2) ↔ (p.Prime ∧ (p - 1) ∣ 2 * k) := by
-          constructor <;> intro h11
-          · exact ⟨h11.1, h11.2.1⟩
-          · exact ⟨h11.1, h11.2, by omega⟩
-        simp [h10]
-      rw [h9]
-      by_cases h10 : p.Prime ∧ (p - 1) ∣ 2 * k
-      · have h13 : p ∈ Finset.filter (fun q => q.Prime ∧ (q - 1) ∣ 2 * k)
-            (Finset.range (2 * k + 2)) := by
-          simp [Finset.mem_filter, Finset.mem_range] at h8 ⊢
-          tauto
-        have h14 : ∑ q ∈ Finset.filter (fun q => q.Prime ∧ (q - 1) ∣ 2 * k)
-          (Finset.range (2 * k + 2)), (1 : ℚ) / q = ∑ q ∈ (Finset.filter
-            (fun q => q.Prime ∧ (q - 1) ∣ 2 * k) (Finset.range (2 * k + 2))).erase p,
-            (1 : ℚ) / q + (1 : ℚ) / p := by
-          rw [← Finset.insert_erase h13, Finset.sum_insert (Finset.notMem_erase p _)]
-          simp_all [Finset.mem_filter, Finset.mem_range]
-        have h17 : ∑ q ∈ (Finset.filter (fun q => q.Prime ∧ (q - 1) ∣ 2 * k)
-          (Finset.range (2 * k + 2))).erase p, (1 : ℚ) / q =
-            ∑ q ∈ Finset.filter (fun q => q.Prime ∧ (q - 1) ∣ 2 * k ∧ q ≠ p)
-              (Finset.range (2 * k + 2)), (1 : ℚ) / q := by
-          have h18 : (Finset.filter (fun q => q.Prime ∧ (q - 1) ∣ 2 * k)
-              (Finset.range (2 * k + 2))).erase p = Finset.filter
-                (fun q => q.Prime ∧ (q - 1) ∣ 2 * k ∧ q ≠ p) (Finset.range (2 * k + 2)) := by
-            apply Finset.ext
-            intro q
-            simp only [Finset.mem_filter, Finset.mem_erase, Finset.mem_range]
-            cases q <;> simp_all [Nat.Prime]
-            tauto
-          rw [h18]
-        have h19 : (if (p.Prime ∧ (p - 1) ∣ 2 * k) then (1 : ℚ) / p else 0) = (1 : ℚ) / p := by
-          simp [h10]
-        rw [h14, h17, h19]
-        ring_nf
-      · have h13 : ∑ q ∈ Finset.filter (fun q => q.Prime ∧ (q - 1) ∣ 2 * k)
-            (Finset.range (2 * k + 2)), (1 : ℚ) / q =
-            ∑ q ∈ Finset.filter (fun q => q.Prime ∧ (q - 1) ∣ 2 * k ∧ q ≠ p)
-              (Finset.range (2 * k + 2)), (1 : ℚ) / q := by
-          have h14 : Finset.filter (fun q => q.Prime ∧ (q - 1) ∣ 2 * k)
-              (Finset.range (2 * k + 2)) =
-              Finset.filter (fun q => q.Prime ∧ (q - 1) ∣ 2 * k ∧ q ≠ p)
-                (Finset.range (2 * k + 2)) := by
-            apply Finset.ext
-            intro q
-            simp only [Finset.mem_filter, Finset.mem_range]
-            by_cases hq : q = p <;> simp_all [Nat.Prime]
-          rw [h14]
-        have h15 : (if (p.Prime ∧ (p - 1) ∣ 2 * k) then (1 : ℚ) / p else 0) = 0 := by
-          simp [h10]
-        rw [h13, h15]
-        ring_nf
-    | inr h5 =>
-      have h8 : ∑ q ∈ Finset.filter
-          (fun q => q.Prime ∧ (q - 1) ∣ 2 * k) (Finset.range (2 * k + 2)), (1 : ℚ) / q =
-          ∑ q ∈ Finset.filter (fun q => q.Prime ∧ (q - 1) ∣ 2 * k ∧ q ≠ p)
-            (Finset.range (2 * k + 2)), (1 : ℚ) / q := by
-        have h9 : Finset.filter (fun q => q.Prime ∧ (q - 1) ∣ 2 * k) (Finset.range (2 * k + 2)) =
-            Finset.filter (fun q => q.Prime ∧ (q - 1) ∣ 2 * k ∧ q ≠ p)
-              (Finset.range (2 * k + 2)) := by
-          apply Finset.ext
-          intro q
-          simp only [Finset.mem_filter, Finset.mem_range]
-          by_cases hq : q = p <;> simp_all [Nat.Prime]
-          omega
-        rw [h9]
-      have h9 : (if (p.Prime ∧ (p - 1) ∣ 2 * k ∧ p < 2 * k + 2) then (1 : ℚ) / p else 0) = 0 := by
-        simp [h5]
-      rw [h8, h9]
-      ring_nf
-  have h4 : (if (p.Prime ∧ (p - 1) ∣ 2 * k ∧ p < 2 * k + 2) then (1 : ℚ) / p else 0) =
-      vonStaudtIndicator (2 * k) p / p := by
-    by_cases h5 : (p - 1 : ℕ) ∣ 2 * k
-    · have h7 : vonStaudtIndicator (2 * k) p = 1 := by simp [vonStaudtIndicator, h5]
-      have h9 : p < 2 * k + 2 := by
-        have h14 : p - 1 ≤ 2 * k := Nat.le_of_dvd (by nlinarith) h5
-        omega
-      have h10 : (if (p.Prime ∧ (p - 1) ∣ 2 * k ∧ p < 2 * k + 2)
-          then (1 : ℚ) / p else 0) = (1 : ℚ) / p := by
-        simp [hp, h5, h9]
-      have h11 : vonStaudtIndicator (2 * k) p / p = (1 : ℚ) / p := by rw [h7]
-      rw [h10, h11]
-    · have h7 : vonStaudtIndicator (2 * k) p = 0 := by
-        simp [vonStaudtIndicator, h5]
-      have h8 : (if (p.Prime ∧ (p - 1) ∣ 2 * k ∧ p < 2 * k + 2)
-          then (1 : ℚ) / p else 0) = 0 := by
-        by_cases h9 : p.Prime ∧ (p - 1) ∣ 2 * k ∧ p < 2 * k + 2
-        · exact absurd h9.2.1 h5
-        · simp [h9]
-      have h9 : vonStaudtIndicator (2 * k) p / p = 0 := by rw [h7]; simp
-      rw [h8, h9]
-  calc (∑ q ∈ Finset.range (2 * k + 2) with
-        q.Prime ∧ (q - 1) ∣ 2 * k, (1 : ℚ) / q) =
-      (if (p.Prime ∧ (p - 1) ∣ 2 * k ∧ p < 2 * k + 2) then (1 : ℚ) / p else 0) +
-        ∑ q ∈ Finset.range (2 * k + 2) with q.Prime ∧ (q - 1) ∣ 2 * k ∧ q ≠ p, (1 : ℚ) / q := h3
-    _ = vonStaudtIndicator (2 * k) p / p + ∑ q ∈ Finset.range (2 * k + 2) with
-          q.Prime ∧ (q - 1) ∣ 2 * k ∧ q ≠ p, (1 : ℚ) / q := by rw [h4]
+  by_cases hdvd : (p - 1 : ℕ) ∣ 2 * k
+  · -- p is in the filtered set; extract its term
+    have hp_mem : p ∈ (Finset.range (2 * k + 2)).filter
+        (fun q => q.Prime ∧ (q - 1) ∣ 2 * k) := by
+      simp only [Finset.mem_filter, Finset.mem_range]
+      exact ⟨by have := Nat.le_of_dvd (by omega) hdvd; omega, hp, hdvd⟩
+    rw [← Finset.add_sum_erase _ _ hp_mem]
+    simp only [vonStaudtIndicator, if_pos hdvd]
+    congr 1
+    apply Finset.sum_congr _ (fun _ _ => rfl)
+    ext q; simp only [Finset.mem_erase, Finset.mem_filter, Finset.mem_range]; tauto
+  · -- p is not in the filtered set; indicator is 0, filter sets are equal
+    simp only [vonStaudtIndicator, if_neg hdvd, zero_div, zero_add]
+    exact Finset.sum_congr (Finset.filter_congr fun q _ =>
+      ⟨fun ⟨hpr, hd⟩ => ⟨hpr, hd, fun h => hdvd (h ▸ hd)⟩,
+       fun ⟨hpr, hd, _⟩ => ⟨hpr, hd⟩⟩) fun _ _ => rfl
 
 lemma pIntegral_of_int (p : ℕ) (z : ℤ) : pIntegral p z := by simp_all [pIntegral]
 
@@ -1291,5 +1191,3 @@ theorem von_staudt_clausen (k : ℕ) :
       (fun p hp => von_staudt_coprime_all_primes_pos k p hk hp)
 
 end vonStaudtClausen
-
-#min_imports
