@@ -825,19 +825,12 @@ lemma even_term_eq_T1_sub_T2 (k m p : ℕ) (hm_lt : m < k) :
     _ = (bernoulli (2 * m) + vonStaudtIndicator (2 * m) p / p) * C * (p : ℚ) ^ (2*(k-m)) / N -
         vonStaudtIndicator (2 * m) p * C * (p : ℚ) ^ (2*(k-m) - 1) / N := by ring
 
-theorem i1_term_forms_eq (k p : ℕ) (hk : k > 0) :
-    bernoulli 1 * (2 * ↑k) * (p : ℚ) ^ (2 * k - 1) / (2 * ↑k) =
-    bernoulli 1 * ↑(2 * k + 1) * (p : ℚ) ^ (2 * k - 1) / (2 * ↑k + 1) := by
-  have h1 : (2 : ℚ) * k ≠ 0 := by positivity
-  have h2 : (2 : ℚ) * k + 1 ≠ 0 := by positivity
-  simp only [show (↑(2 * k + 1) : ℚ) = 2 * ↑k + 1 by norm_cast]
-  field_simp [h1, h2]
-
 lemma pIntegral_i1_term_in_sum (k p : ℕ) (hk : k > 0) (hp : p.Prime) :
     pIntegral p (bernoulli 1 * ((2 * k + 1).choose 1) * (p : ℚ) ^ (2 * k - 1) / (2 * k + 1)) := by
   simp only [Nat.choose_one_right]
-  rw [← i1_term_forms_eq k p hk]
-  exact pIntegral_i1_term k p hk hp
+  convert pIntegral_i1_term k p hk hp using 1
+  push_cast
+  field_simp
 
 lemma valuation_bound_d_plus_1 (p d : ℕ) (hp : p.Prime) (hd : d ≥ 2) :
     (d + 1).factorization p ≤ d - 1 := by
@@ -998,11 +991,8 @@ lemma faulhaber_top_term (k p : ℕ) :
     rw [← Nat.choose_symm_of_eq_add (by omega : 2 * k + 1 = 1 + 2 * k), Nat.choose_one_right]
   rw [h1, show (2 * k + 1 - 2 * k : ℕ) = 1 from by omega, pow_one]
   have h4 : (2 * k + 1 : ℚ) ≠ 0 := by positivity
-  field_simp [h4]
-  ring_nf
-  field_simp [h4]
   norm_cast
-  ring_nf
+  field_simp [h4]
 
 lemma power_sum_indicator_divisible_by_p (k p : ℕ) (hp : p.Prime) :
     ∃ T : ℤ, (∑ v ∈ Finset.range p with v ≠ 0, (v : ℤ) ^ (2 * k)) +
