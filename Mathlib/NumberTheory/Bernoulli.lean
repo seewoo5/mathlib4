@@ -607,8 +607,7 @@ lemma sum_primes_eq_indicator_add_rest (k p : ℕ) (hk : k > 0) (hp : p.Prime) :
       q.Prime ∧ (q - 1) ∣ 2 * k ∧ q ≠ p, (1 : ℚ) / q := by
   by_cases hdvd : (p - 1 : ℕ) ∣ 2 * k
   · -- p is in the filtered set; extract its term
-    have hp_mem : p ∈ (Finset.range (2 * k + 2)).filter
-        (fun q => q.Prime ∧ (q - 1) ∣ 2 * k) := by
+    have hp_mem : p ∈ (Finset.range (2 * k + 2)).filter (fun q => q.Prime ∧ (q - 1) ∣ 2 * k) := by
       simp only [Finset.mem_filter, Finset.mem_range]
       exact ⟨by have := Nat.le_of_dvd (by omega) hdvd; omega, hp, hdvd⟩
     rw [← Finset.add_sum_erase _ _ hp_mem]
@@ -1171,8 +1170,7 @@ lemma von_staudt_coprime_all_primes_pos (k p : ℕ) (hk : k > 0) (hp : p.Prime) 
       (sum_other_primes_coprime_p_pos k p hp))
 
 theorem von_staudt_clausen (k : ℕ) :
-    bernoulli (2 * k) +
-      ∑ p ∈ Finset.range (2 * k + 2) with p.Prime ∧ (p - 1) ∣ 2 * k,
+    bernoulli (2 * k) + ∑ p ∈ Finset.range (2 * k + 2) with p.Prime ∧ (p - 1) ∣ 2 * k,
       (1 : ℚ) / p ∈ Set.range Int.cast := by
   rcases Nat.eq_zero_or_pos k with rfl | hk
   · exact von_staudt_clausen_zero
