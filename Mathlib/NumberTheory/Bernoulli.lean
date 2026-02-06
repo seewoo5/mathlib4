@@ -65,6 +65,8 @@ then defined as `bernoulli := (-1)^n * bernoulli'`.
   if n = 1 then 1 else 0`
 -/
 
+set_option linter.style.longFile 1800
+
 @[expose] public section
 
 
@@ -477,12 +479,12 @@ lemma sum_pow_eq_sum_units_pow (p l : ℕ) [Fact p.Prime] :
   · intro v hv
     simp only [Finset.mem_filter, Finset.mem_range] at hv
     have : (v : ZMod p).val = v := ZMod.val_cast_of_lt hv.1
-    simp only [Units.val_mk, this]
+    simp only [this]
   · intro u _
     ext
-    simp only [Units.val_mk, ZMod.natCast_zmod_val]
+    simp only [ZMod.natCast_zmod_val]
   · intro v _
-    simp only [Units.val_mk]
+    simp
 
 lemma prime_ne_two_of_not_dvd_sub_one (p l : ℕ) (_hp : p.Prime) (hndvd : ¬(p - 1) ∣ l) :
     p ≠ 2 := fun h => by subst h; simp at hndvd
@@ -604,9 +606,10 @@ def pIntegral (p : ℕ) (x : ℚ) : Prop := x.den.Coprime p
 lemma sum_den_dvd_prod_den {ι : Type*} (s : Finset ι) (f : ι → ℚ) :
     (∑ i ∈ s, f i).den ∣ ∏ i ∈ s, (f i).den := by
   classical
-  induction' s using Finset.induction_on with a s has ih
-  · simp
-  · rw [Finset.sum_insert has, Finset.prod_insert has]
+  induction s using Finset.induction_on with
+  | empty => simp
+  | @insert a s has ih =>
+    rw [Finset.sum_insert has, Finset.prod_insert has]
     exact dvd_trans (Rat.add_den_dvd (f a) (∑ x ∈ s, f x)) (mul_dvd_mul_left _ ih)
 
 lemma pIntegral_sum {ι : Type*} (p : ℕ) (s : Finset ι) (f : ι → ℚ)
@@ -804,7 +807,7 @@ lemma ordCompl_ne_zero (p M : ℕ) (_hp : p.Prime) (hM : M ≠ 0) :
 
 lemma pow_div_eq_pow_sub_div_ordCompl (p M N : ℕ) (hp : p.Prime) (hM : M ≠ 0)
     (hv : M.factorization p ≤ N) :
-    (p : ℚ)^N / M = (p : ℚ)^(N - M.factorization p) / (M / p ^ M.factorization p) := by
+    (p : ℚ)^N / M = (p : ℚ) ^ (N - M.factorization p) / (M / p ^ M.factorization p) := by
   set e := M.factorization p with he
   set M' := M / p ^ e with hM'
   have hdecomp : p ^ e * M' = M := Nat.ordProj_mul_ordCompl_eq_self M p
@@ -836,7 +839,7 @@ lemma pIntegral_pow_div (p M N : ℕ) (hp : p.Prime) (hM : M ≠ 0)
     simp only [← Nat.cast_pow]
     rw [Nat.cast_div_charZero (Nat.ordProj_dvd M p)]
   rw [hcast]
-  have hdvd : ((p : ℚ)^(N - M.factorization p) / M').den ∣ M' :=
+  have hdvd : ((p : ℚ) ^ (N - M.factorization p) / M').den ∣ M' :=
     den_pow_div_dvd p M' (N - M.factorization p) hM'_ne
   exact pIntegral_of_den_dvd_coprime p _ M' hdvd hM'_cop
 
@@ -848,15 +851,15 @@ lemma valuation_bound (p n : ℕ) (hp : p.Prime) (_hn : n ≥ 1) :
       _ ≤ p ^ n := Nat.pow_le_pow_left hp.two_le n
 
 lemma pIntegral_i0_term (k p : ℕ) (hk : k > 0) (hp : p.Prime) :
-    pIntegral p ((p : ℚ)^(2*k) / (2*k + 1)) := by
+    pIntegral p ((p : ℚ) ^ (2 * k) / (2 * k + 1)) := by
   have h : (2 * k + 1 : ℚ) = ↑(2 * k + 1) := by push_cast; ring
   rw [h]
-  apply pIntegral_pow_div p (2*k + 1) (2*k) hp
+  apply pIntegral_pow_div p (2 * k + 1) (2 * k) hp
   · omega
-  · exact valuation_bound p (2*k) hp (by omega)
+  · exact valuation_bound p (2 * k) hp (by omega)
 
 lemma pIntegral_i1_term_p_eq_two (k : ℕ) (hk : k > 0) :
-    pIntegral 2 (bernoulli 1 * (2*k) * (2 : ℚ)^(2*k - 1) / (2*k)) := by
+    pIntegral 2 (bernoulli 1 * (2 * k) * (2 : ℚ) ^ (2 * k - 1) / (2 * k)) := by
   have h1 : bernoulli 1 = -1 / 2 := by norm_num [bernoulli_one]
   rw [h1]
   have h2 : ((-1 / 2 : ℚ) * (2 * k : ℚ) * (2 : ℚ) ^ (2 * k - 1) / (2 * k : ℚ)) =
@@ -889,7 +892,7 @@ lemma pIntegral_i1_term_p_eq_two (k : ℕ) (hk : k > 0) :
   norm_num [pIntegral]
 
 lemma i1_term_simplify (k p : ℕ) (hk : k > 0) :
-    bernoulli 1 * (2*k) * (p : ℚ)^(2*k - 1) / (2*k) = -(p : ℚ)^(2*k - 1) / 2 := by
+    bernoulli 1 * (2 * k) * (p : ℚ) ^ (2 * k - 1) / (2 * k) = -(p : ℚ) ^ (2 * k - 1) / 2 := by
   have h1 : bernoulli 1 = (-1 : ℚ) / 2 := by norm_num [bernoulli]
   rw [h1]
   have h2 : ((2 * k : ℕ) : ℚ) ≠ 0 := by norm_cast; omega
@@ -900,24 +903,24 @@ lemma two_coprime_odd_prime (p : ℕ) (hp : p.Prime) (hp2 : p ≠ 2) :
   Odd.coprime_two_left (Nat.Prime.odd_of_ne_two hp hp2)
 
 lemma den_neg_pow_div_two_dvd_two (k p : ℕ) :
-    (-(p : ℚ)^(2*k - 1) / 2).den ∣ 2 := by
+    (-(p : ℚ) ^ (2 * k - 1) / 2).den ∣ 2 := by
   rw [neg_div, Rat.den_neg_eq_den, ← Nat.cast_pow]
   conv_lhs => rw [show (2 : ℚ) = (2 : ℕ) from rfl, Rat.natCast_div_eq_divInt]
   have h := Rat.den_dvd (p ^ (2 * k - 1)) 2
   exact Int.natCast_dvd_natCast.mp h
 
 lemma pIntegral_neg_pow_div_two (k p : ℕ) (hp : p.Prime) (hp2 : p ≠ 2) :
-    pIntegral p (-(p : ℚ)^(2*k - 1) / 2) := by
+    pIntegral p (-(p : ℚ) ^ (2 * k - 1) / 2) := by
   unfold pIntegral
   exact Nat.Coprime.of_dvd_left (den_neg_pow_div_two_dvd_two k p) (two_coprime_odd_prime p hp hp2)
 
 lemma pIntegral_i1_term_p_odd (k p : ℕ) (hk : k > 0) (hp : p.Prime) (hp2 : p ≠ 2) :
-    pIntegral p (bernoulli 1 * (2*k) * (p : ℚ)^(2*k - 1) / (2*k)) := by
+    pIntegral p (bernoulli 1 * (2 * k) * (p : ℚ) ^ (2 * k - 1) / (2 * k)) := by
   rw [i1_term_simplify k p hk]
   exact pIntegral_neg_pow_div_two k p hp hp2
 
 lemma pIntegral_i1_term (k p : ℕ) (hk : k > 0) (hp : p.Prime) :
-    pIntegral p (bernoulli 1 * (2*k) * (p : ℚ)^(2*k - 1) / (2*k)) := by
+    pIntegral p (bernoulli 1 * (2 * k) * (p : ℚ) ^ (2 * k - 1) / (2 * k)) := by
   obtain rfl | hp2 := eq_or_ne p 2
   · exact pIntegral_i1_term_p_eq_two k hk
   · exact pIntegral_i1_term_p_odd k p hk hp hp2
@@ -950,19 +953,19 @@ lemma valuation_bound_d_plus_1_p2_d2 :
 lemma pow_two_ge_succ_of_ge_three (d : ℕ) (hd : d ≥ 3) : d + 1 ≤ 2 ^ (d - 1) := by
   have h : ∀ n : ℕ, n ≥ 3 → n + 1 ≤ 2 ^ (n - 1) := by
     intro n hn
-    induction' hn with n hn IH
-    · norm_num
-    · cases n with
-      | zero => contradiction
-      | succ n =>
-        cases n with
-        | zero => contradiction
-        | succ n =>
-          cases n with
-          | zero => contradiction
-          | succ n =>
-            simp [pow_succ, mul_assoc] at IH ⊢
-            omega
+    induction hn with
+    | refl => norm_num
+    | @step m hm IH =>
+      have hm : (3 : ℕ) ≤ m := hm
+      have IH := IH
+      have h1 : 2 ^ (m - 1) ≥ 1 := Nat.one_le_pow _ _ (by omega)
+      have h2 : m - 1 + 1 = m := by omega
+      have h3 : 2 ^ (m - 1) * 2 = 2 ^ m := by
+        conv_rhs => rw [← h2]
+        exact (pow_succ 2 (m - 1)).symm
+      calc m + 1 + 1 ≤ 2 ^ (m - 1) + 1 := by omega
+        _ ≤ 2 ^ (m - 1) * 2 := by nlinarith
+        _ = 2 ^ m := h3
   exact h d hd
 
 lemma pow_ge_succ_of_ge_three (p d : ℕ) (hp : 3 ≤ p) (hd : d ≥ 2) :
@@ -970,23 +973,27 @@ lemma pow_ge_succ_of_ge_three (p d : ℕ) (hp : 3 ≤ p) (hd : d ≥ 2) :
   have h1 : d + 1 ≤ p ^ (d - 1) := by
     have h2 : ∀ d : ℕ, d ≥ 2 → d + 1 ≤ p ^ (d - 1) := by
       intro d hd
-      induction' hd with d hd IH
-      · norm_num
+      induction hd with
+      | refl =>
+        norm_num
         omega
-      · cases d with
-        | zero => contradiction
-        | succ d =>
-          cases d with
-          | zero => contradiction
-          | succ d =>
-            simp_all [Nat.pow_succ, Nat.mul_assoc]
-            have h4 : p ^ d ≥ 1 := Nat.one_le_pow _ _ (by omega)
+      | @step m hm IH =>
+        have hm : (2 : ℕ) ≤ m := hm
+        have IH := IH
+        have hm1 : m - 1 + 1 = m := by omega
+        have h3 : p ^ (m - 1) * p = p ^ m := by
+          conv_rhs => rw [← hm1]
+          exact (pow_succ p (m - 1)).symm
+        calc m + 1 + 1 ≤ p ^ (m - 1) + 1 := by omega
+          _ ≤ p ^ (m - 1) * p := by
+            have : p ^ (m - 1) ≥ 1 := Nat.one_le_pow _ _ (by omega)
             nlinarith
+          _ = p ^ m := h3
     exact h2 d hd
   exact h1
 
 lemma pIntegral_pow_div_factor (k m p : ℕ) (_hm_pos : m ≥ 1) (hm_lt : m < k) (hp : p.Prime) :
-    pIntegral p ((p : ℚ)^(2*(k-m)) / (2*(↑k - ↑m) + 1)) := by
+    pIntegral p ((p : ℚ) ^ (2*(k-m)) / (2*(↑k - ↑m) + 1)) := by
   set d := k - m with hd
   have hd_pos : d ≥ 1 := by omega
   have hcast : (↑k : ℚ) - ↑m = ↑d := by rw [hd, Nat.cast_sub (le_of_lt hm_lt)]
@@ -999,18 +1006,18 @@ lemma pIntegral_pow_div_factor (k m p : ℕ) (_hm_pos : m ≥ 1) (hm_lt : m < k)
     exact valuation_bound p (2 * d) hp hn
 
 lemma pIntegral_T1 (k m p : ℕ) (_hk : k > 0) (hm_pos : m ≥ 1) (hm_lt : m < k) (hp : p.Prime)
-    (ih : pIntegral p (bernoulli (2*m) + vonStaudtIndicator (2*m) p / p)) :
-    pIntegral p ((bernoulli (2*m) + vonStaudtIndicator (2*m) p / p) * ((2*k).choose (2*m)) *
-                 (p : ℚ)^(2*(k-m)) / (2*(k-m) + 1)) := by
-  have h_eq : (bernoulli (2*m) + vonStaudtIndicator (2*m) p / p) * ((2*k).choose (2*m)) *
-              (p : ℚ)^(2*(k-m)) / (2*(k-m) + 1) =
-              ((bernoulli (2*m) + vonStaudtIndicator (2*m) p / p) * ((2*k).choose (2*m))) *
-              ((p : ℚ)^(2*(k-m)) / (2*(k-m) + 1)) := by ring
+    (ih : pIntegral p (bernoulli (2 * m) + vonStaudtIndicator (2 * m) p / p)) :
+    pIntegral p ((bernoulli (2 * m) + vonStaudtIndicator (2 * m) p / p) * ((2 * k).choose (2 * m)) *
+                 (p : ℚ) ^ (2*(k-m)) / (2*(k-m) + 1)) := by
+  have h_eq : (bernoulli (2 * m) + vonStaudtIndicator (2 * m) p / p) * ((2 * k).choose (2 * m)) *
+              (p : ℚ) ^ (2*(k-m)) / (2*(k-m) + 1) =
+              ((bernoulli (2 * m) + vonStaudtIndicator (2 * m) p / p) * ((2 * k).choose (2 * m))) *
+              ((p : ℚ) ^ (2*(k-m)) / (2*(k-m) + 1)) := by ring
   rw [h_eq]
   apply pIntegral_mul
   · apply pIntegral_mul
     · exact ih
-    · exact pIntegral_of_int p ((2*k).choose (2*m))
+    · exact pIntegral_of_int p ((2 * k).choose (2 * m))
   · exact pIntegral_pow_div_factor k m p hm_pos hm_lt hp
 
 lemma valuation_three_le_one (p : ℕ) (hp : p.Prime) : (3 : ℕ).factorization p ≤ 1 := by
@@ -1041,7 +1048,7 @@ lemma valuation_bound_2d_plus_1 (p d : ℕ) (hp : p.Prime) (hd : d ≥ 1) :
       _ ≤ p ^ (2 * d - 1) := Nat.pow_le_pow_left hp.two_le _
 
 lemma pIntegral_T2 (k m p : ℕ) (_hk : k > 0) (_hm_pos : m ≥ 1) (hm_lt : m < k) (hp : p.Prime) :
-    pIntegral p (vonStaudtIndicator (2*m) p * ((2*k).choose (2*m)) * (p : ℚ)^(2*(k-m) - 1) /
+    pIntegral p (vonStaudtIndicator (2 * m) p * ((2 * k).choose (2 * m)) * (p : ℚ) ^ (2*(k-m) - 1) /
                  (2*(k-m) + 1)) := by
   set d := k - m with hd_def
   have hd_pos : d ≥ 1 := by omega
@@ -1058,44 +1065,44 @@ lemma pIntegral_T2 (k m p : ℕ) (_hk : k > 0) (_hm_pos : m ≥ 1) (hm_lt : m < 
     have hN_ne_zero : (2 * d + 1 : ℕ) ≠ 0 := by omega
     have hvaluation : (2 * d + 1).factorization p ≤ 2 * d - 1 :=
       valuation_bound_2d_plus_1 p d hp hd_pos
-    have h_pow_pIntegral : pIntegral p ((p : ℚ)^(2 * d - 1) / ↑(2 * d + 1)) :=
+    have h_pow_pIntegral : pIntegral p ((p : ℚ) ^ (2 * d - 1) / ↑(2 * d + 1)) :=
       pIntegral_pow_div p (2 * d + 1) (2 * d - 1) hp hN_ne_zero hvaluation
     have h_rw :
         (↑((2 * k).choose (2 * m)) : ℚ) * ↑p ^ (2 * d - 1) / ↑(2 * d + 1) =
         (↑((2 * k).choose (2 * m)) : ℚ) *
           (↑p ^ (2 * d - 1) / ↑(2 * d + 1)) := by ring
     rw [h_rw]
-    exact pIntegral_mul_nat p ((p : ℚ)^(2 * d - 1) / ↑(2 * d + 1))
-      ((2*k).choose (2*m)) h_pow_pIntegral
+    exact pIntegral_mul_nat p ((p : ℚ) ^ (2 * d - 1) / ↑(2 * d + 1))
+      ((2 * k).choose (2 * m)) h_pow_pIntegral
   · simp only [zero_mul, zero_div]
     exact pIntegral_of_int p 0
 
 lemma core_algebraic_identity (B I : ℚ) (p d : ℕ) (hd : d ≥ 1) :
-    B * (p : ℚ)^(2*d) = (B + I / p) * (p : ℚ)^(2*d) - I * (p : ℚ)^(2*d - 1) := by
-  have h1 : (B + I / p) * (p : ℚ)^(2*d) - I * (p : ℚ)^(2*d - 1) =
-      B * (p : ℚ)^(2*d) + I * (p : ℚ)^(2*d - 1) - I * (p : ℚ)^(2*d - 1) := by
-    have h2 : (B + I / p) * (p : ℚ)^(2*d) = B * (p : ℚ)^(2*d) + I * (p : ℚ)^(2*d - 1) := by
+    B * (p : ℚ) ^ (2*d) = (B + I / p) * (p : ℚ) ^ (2*d) - I * (p : ℚ) ^ (2*d - 1) := by
+  have h1 : (B + I / p) * (p : ℚ) ^ (2*d) - I * (p : ℚ) ^ (2*d - 1) =
+      B * (p : ℚ) ^ (2*d) + I * (p : ℚ) ^ (2*d - 1) - I * (p : ℚ) ^ (2*d - 1) := by
+    have h2 : (B + I / p) * (p : ℚ) ^ (2*d) = B * (p : ℚ) ^ (2*d) + I * (p : ℚ) ^ (2*d - 1) := by
       by_cases h : (p : ℚ) = 0
       · have h3 : (p : ℕ) = 0 := by norm_cast at h ⊢
         have h4 : 2 * d ≥ 1 := by omega
-        have h5 : (p : ℚ)^(2*d) = 0 := by rw [h3]; norm_cast; simp; omega
-        have h6 : (p : ℚ)^(2*d - 1) = 0 := by
+        have h5 : (p : ℚ) ^ (2*d) = 0 := by rw [h3]; norm_cast; simp; omega
+        have h6 : (p : ℚ) ^ (2*d - 1) = 0 := by
           have h7 : (2 * d : ℕ) - 1 ≥ 0 := by omega
           have h8 : (p : ℕ) = 0 := by norm_cast at h ⊢
           rw [h8]; norm_cast; simp; omega
         simp_all
       · have h3 : (p : ℚ) ≠ 0 := by exact_mod_cast h
-        calc (B + I / p) * (p : ℚ)^(2*d) =
-              B * (p : ℚ)^(2*d) + (I / p) * (p : ℚ)^(2*d) := by ring
-          _ = B * (p : ℚ)^(2*d) + I * (p : ℚ)^(2*d - 1) := by
-            have h4 : (I / p : ℚ) * (p : ℚ)^(2*d) = I * (p : ℚ)^(2*d - 1) := by
-              calc (I / p : ℚ) * (p : ℚ)^(2*d) = I * (p : ℚ)^(2*d) / p := by ring
-                _ = I * (p : ℚ)^(2*d - 1) := by
-                  have h5 : (p : ℚ)^(2*d) = (p : ℚ)^(2*d - 1) * p := by
+        calc (B + I / p) * (p : ℚ) ^ (2*d) =
+              B * (p : ℚ) ^ (2*d) + (I / p) * (p : ℚ) ^ (2*d) := by ring
+          _ = B * (p : ℚ) ^ (2*d) + I * (p : ℚ) ^ (2*d - 1) := by
+            have h4 : (I / p : ℚ) * (p : ℚ) ^ (2*d) = I * (p : ℚ) ^ (2*d - 1) := by
+              calc (I / p : ℚ) * (p : ℚ) ^ (2*d) = I * (p : ℚ) ^ (2*d) / p := by ring
+                _ = I * (p : ℚ) ^ (2*d - 1) := by
+                  have h5 : (p : ℚ) ^ (2*d) = (p : ℚ) ^ (2*d - 1) * p := by
                     have h7 : (2 * d : ℕ) - 1 + 1 = 2 * d := by omega
-                    calc (p : ℚ)^(2*d) = (p : ℚ)^((2*d - 1) + 1) := by rw [h7]
-                      _ = (p : ℚ)^(2*d - 1) * (p : ℚ)^1 := by rw [pow_add]
-                      _ = (p : ℚ)^(2*d - 1) * p := by simp [pow_one]
+                    calc (p : ℚ) ^ (2*d) = (p : ℚ) ^ ((2*d - 1) + 1) := by rw [h7]
+                      _ = (p : ℚ) ^ (2*d - 1) * (p : ℚ)^1 := by rw [pow_add]
+                      _ = (p : ℚ) ^ (2*d - 1) * p := by simp [pow_one]
                   rw [h5]
                   field_simp [h3]
             rw [h4]
@@ -1103,21 +1110,21 @@ lemma core_algebraic_identity (B I : ℚ) (p d : ℕ) (hd : d ≥ 1) :
   linarith
 
 lemma even_term_eq_T1_sub_T2 (k m p : ℕ) (hm_lt : m < k) :
-    (bernoulli (2*m) * ((2*k).choose (2*m)) * (p : ℚ)^(2*(k-m)) / (2*(k-m) + 1) : ℚ) =
-    (bernoulli (2*m) + vonStaudtIndicator (2*m) p / p) * ((2*k).choose (2*m)) *
-                 (p : ℚ)^(2*(k-m)) / (2*(k-m) + 1) -
-    vonStaudtIndicator (2*m) p * ((2*k).choose (2*m)) *
-      (p : ℚ)^(2*(k-m) - 1) / (2*(k-m) + 1) := by
+    (bernoulli (2 * m) * ((2 * k).choose (2 * m)) * (p : ℚ) ^ (2*(k-m)) / (2*(k-m) + 1) : ℚ) =
+    (bernoulli (2 * m) + vonStaudtIndicator (2 * m) p / p) * ((2 * k).choose (2 * m)) *
+                 (p : ℚ) ^ (2*(k-m)) / (2*(k-m) + 1) -
+    vonStaudtIndicator (2 * m) p * ((2 * k).choose (2 * m)) *
+      (p : ℚ) ^ (2*(k-m) - 1) / (2*(k-m) + 1) := by
   have hd : k - m ≥ 1 := by omega
-  have h := core_algebraic_identity (bernoulli (2*m)) (vonStaudtIndicator (2*m) p) p (k - m) hd
-  set C := ((2*k).choose (2*m) : ℚ)
+  have h := core_algebraic_identity (bernoulli (2 * m)) (vonStaudtIndicator (2 * m) p) p (k - m) hd
+  set C := ((2 * k).choose (2 * m) : ℚ)
   set N := (2 * (k - m) + 1 : ℚ)
-  calc bernoulli (2*m) * C * (p : ℚ)^(2*(k-m)) / N
-      = (bernoulli (2*m) * (p : ℚ)^(2*(k-m))) * C / N := by ring
-    _ = ((bernoulli (2*m) + vonStaudtIndicator (2*m) p / p) * (p : ℚ)^(2*(k-m)) -
-         vonStaudtIndicator (2*m) p * (p : ℚ)^(2*(k-m) - 1)) * C / N := by rw [h]
-    _ = (bernoulli (2*m) + vonStaudtIndicator (2*m) p / p) * C * (p : ℚ)^(2*(k-m)) / N -
-        vonStaudtIndicator (2*m) p * C * (p : ℚ)^(2*(k-m) - 1) / N := by ring
+  calc bernoulli (2 * m) * C * (p : ℚ) ^ (2*(k-m)) / N
+      = (bernoulli (2 * m) * (p : ℚ) ^ (2*(k-m))) * C / N := by ring
+    _ = ((bernoulli (2 * m) + vonStaudtIndicator (2 * m) p / p) * (p : ℚ) ^ (2*(k-m)) -
+         vonStaudtIndicator (2 * m) p * (p : ℚ) ^ (2*(k-m) - 1)) * C / N := by rw [h]
+    _ = (bernoulli (2 * m) + vonStaudtIndicator (2 * m) p / p) * C * (p : ℚ) ^ (2*(k-m)) / N -
+        vonStaudtIndicator (2 * m) p * C * (p : ℚ) ^ (2*(k-m) - 1) / N := by ring
 
 lemma pIntegral_sub (p : ℕ) (x y : ℚ) (hx : pIntegral p x) (hy : pIntegral p y) :
     pIntegral p (x - y) :=
@@ -1126,9 +1133,9 @@ lemma pIntegral_sub (p : ℕ) (x y : ℚ) (hx : pIntegral p x) (hy : pIntegral p
 lemma pIntegral_even_term (k m p : ℕ) (hk : k > 0) (hm_pos : m ≥ 1)
     (hm_lt : m < k) (hp : p.Prime)
     (ih : pIntegral p
-      (bernoulli (2*m) + vonStaudtIndicator (2*m) p / p)) :
-    pIntegral p (bernoulli (2*m) * ((2*k).choose (2*m)) *
-      (p : ℚ)^(2*(k-m)) / (2*(k-m) + 1)) := by
+      (bernoulli (2 * m) + vonStaudtIndicator (2 * m) p / p)) :
+    pIntegral p (bernoulli (2 * m) * ((2 * k).choose (2 * m)) *
+      (p : ℚ) ^ (2*(k-m)) / (2*(k-m) + 1)) := by
   rw [even_term_eq_T1_sub_T2 k m p hm_lt]
   exact pIntegral_sub p _ _ (pIntegral_T1 k m p hk hm_pos hm_lt hp ih)
     (pIntegral_T2 k m p hk hm_pos hm_lt hp)
@@ -1142,7 +1149,7 @@ theorem i1_term_forms_eq (k p : ℕ) (hk : k > 0) :
   field_simp [h1, h2]
 
 lemma pIntegral_i1_term_in_sum (k p : ℕ) (hk : k > 0) (hp : p.Prime) :
-    pIntegral p (bernoulli 1 * ((2*k + 1).choose 1) * (p : ℚ)^(2*k - 1) / (2*k + 1)) := by
+    pIntegral p (bernoulli 1 * ((2 * k + 1).choose 1) * (p : ℚ) ^ (2 * k - 1) / (2 * k + 1)) := by
   simp only [Nat.choose_one_right]
   rw [← i1_term_forms_eq k p hk]
   exact pIntegral_i1_term k p hk hp
@@ -1171,14 +1178,14 @@ lemma denom_cast_eq (k m : ℕ) (hm_lt : m < k) :
   simp only [Nat.cast_sub h, Nat.cast_add, Nat.cast_mul, Nat.cast_ofNat, Nat.cast_one]
 
 lemma choose_mul_succ_rat (k m : ℕ) :
-    ((2*k).choose (2*m) : ℚ) * ((2*k + 1 : ℕ) : ℚ) =
-    ((2*k + 1).choose (2*m)) * ((2*k + 1 - 2*m) : ℕ) := by
-  have h := Nat.choose_mul_succ_eq (2*k) (2*m)
+    ((2 * k).choose (2 * m) : ℚ) * ((2 * k + 1 : ℕ) : ℚ) =
+    ((2 * k + 1).choose (2 * m)) * ((2 * k + 1 - 2 * m) : ℕ) := by
+  have h := Nat.choose_mul_succ_eq (2 * k) (2 * m)
   exact_mod_cast h
 
 lemma choose_div_core (k m : ℕ) (hm_lt : m < k) :
-    ((2*k + 1).choose (2*m) : ℚ) / (2*k + 1) =
-    ((2*k).choose (2*m) : ℚ) / (2*k - 2*m + 1) := by
+    ((2 * k + 1).choose (2 * m) : ℚ) / (2 * k + 1) =
+    ((2 * k).choose (2 * m) : ℚ) / (2 * k - 2 * m + 1) := by
   have h_denom : (2 * (k : ℚ) - 2 * m + 1) = ((2 * k - 2 * m + 1 : ℕ) : ℚ) :=
     (denom_cast_eq k m hm_lt).symm
   conv_rhs => rw [h_denom]
@@ -1186,21 +1193,23 @@ lemma choose_div_core (k m : ℕ) (hm_lt : m < k) :
   simp only [h_nat]
   have h_lhs_denom : (2 * (k : ℚ) + 1) = ((2 * k + 1 : ℕ) : ℚ) := by push_cast; ring
   conv_lhs => rw [h_lhs_denom]
-  have hk_pos : ((2*k + 1 : ℕ) : ℚ) ≠ 0 := by positivity
-  have hd_pos : ((2*k + 1 - 2*m : ℕ) : ℚ) ≠ 0 := by simp only [Nat.cast_ne_zero]; omega
+  have hk_pos : ((2 * k + 1 : ℕ) : ℚ) ≠ 0 := by positivity
+  have hd_pos : ((2 * k + 1 - 2 * m : ℕ) : ℚ) ≠ 0 := by simp only [Nat.cast_ne_zero]; omega
   rw [div_eq_div_iff hk_pos hd_pos]
   exact (choose_mul_succ_rat k m).symm
 
 lemma choose_div_simplify (k m : ℕ) (x : ℚ) (hm_lt : m < k) :
-    ((2*k + 1).choose (2*m) : ℚ) * x / (2*k + 1) =
-    ((2*k).choose (2*m) : ℚ) * x / (2*k - 2*m + 1) := by
+    ((2 * k + 1).choose (2 * m) : ℚ) * x / (2 * k + 1) =
+    ((2 * k).choose (2 * m) : ℚ) * x / (2 * k - 2 * m + 1) := by
   have h := choose_div_core k m hm_lt
   rw [mul_comm ((2 * k + 1).choose (2 * m) : ℚ) x, mul_div_assoc,
       mul_comm ((2 * k).choose (2 * m) : ℚ) x, mul_div_assoc, h]
 
 lemma pIntegral_case_one (k m p : ℕ) (_hk : k > 0) (_hm_pos : m ≥ 1) (hm_lt : m < k)
     (hp : p.Prime) (hd : 2 * k - 2 * m ≥ 2) :
-    pIntegral p (((2*k).choose (2*m) : ℚ) * (p : ℚ)^(2*k - 2*m - 1) / (2*k - 2*m + 1)) := by
+    pIntegral p (((2 * k).choose (2 * m) : ℚ) *
+      (p : ℚ) ^ (2 * k - 2 * m - 1) /
+      (2 * k - 2 * m + 1)) := by
   set d := 2 * k - 2 * m with hd_def
   have hd_ne_zero : d ≠ 0 := by omega
   have hd_plus_one_ne_zero : d + 1 ≠ 0 := by omega
@@ -1212,18 +1221,20 @@ lemma pIntegral_case_one (k m p : ℕ) (_hk : k > 0) (_hm_pos : m ≥ 1) (hm_lt 
     push_cast
     ring
   rw [h_exp, h_denom_rat]
-  have h_pow_integral : pIntegral p ((p : ℚ)^(d - 1) / ((d + 1 : ℕ) : ℚ)) := by
+  have h_pow_integral : pIntegral p ((p : ℚ) ^ (d - 1) / ((d + 1 : ℕ) : ℚ)) := by
     apply pIntegral_pow_div p (d + 1) (d - 1) hp hd_plus_one_ne_zero
     exact valuation_bound_d_plus_1 p d hp hd
-  have h_eq : ((2*k).choose (2*m) : ℚ) * (p : ℚ)^(d - 1) / ((d + 1 : ℕ) : ℚ) =
-      ((2*k).choose (2*m) : ℕ) * ((p : ℚ)^(d - 1) / ((d + 1 : ℕ) : ℚ)) := by ring
+  have h_eq : ((2 * k).choose (2 * m) : ℚ) * (p : ℚ) ^ (d - 1) / ((d + 1 : ℕ) : ℚ) =
+      ((2 * k).choose (2 * m) : ℕ) * ((p : ℚ) ^ (d - 1) / ((d + 1 : ℕ) : ℚ)) := by ring
   rw [h_eq]
   exact pIntegral_mul_nat p _ _ h_pow_integral
 
 lemma pIntegral_second_term (k m p : ℕ) (hk : k > 0) (hm_pos : m ≥ 1) (hm_lt : m < k)
     (hp : p.Prime) :
-    pIntegral p (vonStaudtIndicator (2*m) p * ((2*k + 1).choose (2*m)) * (p : ℚ)^(2*k - 2*m - 1) /
-      (2*k + 1)) := by
+    pIntegral p (vonStaudtIndicator (2 * m) p *
+      ((2 * k + 1).choose (2 * m)) *
+      (p : ℚ) ^ (2 * k - 2 * m - 1) /
+      (2 * k + 1)) := by
   unfold vonStaudtIndicator
   split_ifs with h
   · simp only [one_mul]
@@ -1237,13 +1248,13 @@ lemma pIntegral_second_term (k m p : ℕ) (hk : k > 0) (hm_pos : m ≥ 1) (hm_lt
 
 lemma even_term_decomposition_identity (k m p : ℕ) (hk : k > 0)
     (hm_pos : m ≥ 1) (hm_lt : m < k) :
-    (bernoulli (2*m) * ((2*k + 1).choose (2*m)) *
-      (p : ℚ)^(2*k - 2*m) / (2*k + 1) : ℚ) =
-    (bernoulli (2*m) + vonStaudtIndicator (2*m) p / p) *
-      ((2*k + 1).choose (2*m)) *
-      (p : ℚ)^(2*k - 2*m) / (2*k + 1) -
-    vonStaudtIndicator (2*m) p * ((2*k + 1).choose (2*m)) *
-      (p : ℚ)^(2*k - 2*m - 1) / (2*k + 1) := by
+    (bernoulli (2 * m) * ((2 * k + 1).choose (2 * m)) *
+      (p : ℚ) ^ (2 * k - 2 * m) / (2 * k + 1) : ℚ) =
+    (bernoulli (2 * m) + vonStaudtIndicator (2 * m) p / p) *
+      ((2 * k + 1).choose (2 * m)) *
+      (p : ℚ) ^ (2 * k - 2 * m) / (2 * k + 1) -
+    vonStaudtIndicator (2 * m) p * ((2 * k + 1).choose (2 * m)) *
+      (p : ℚ) ^ (2 * k - 2 * m - 1) / (2 * k + 1) := by
   have h2 : (bernoulli (2 * m) + vonStaudtIndicator (2 * m) p / p) *
       ((2 * k + 1).choose (2 * m)) *
       (p : ℚ) ^ (2 * k - 2 * m) / (2 * k + 1) -
@@ -1324,15 +1335,15 @@ lemma even_term_decomposition_identity (k m p : ℕ) (hk : k > 0)
 
 lemma pIntegral_coeff_term (k m p : ℕ) (hk : k > 0) (hm_pos : m ≥ 1) (hm_lt : m < k)
     (hp : p.Prime) :
-    pIntegral p (((2*k + 1).choose (2*m) : ℚ) * (p : ℚ)^(2*k - 2*m) / (2*k + 1)) := by
-  have hsimp := choose_div_simplify k m ((p : ℚ)^(2*k - 2*m)) hm_lt
+    pIntegral p (((2 * k + 1).choose (2 * m) : ℚ) * (p : ℚ) ^ (2 * k - 2 * m) / (2 * k + 1)) := by
+  have hsimp := choose_div_simplify k m ((p : ℚ) ^ (2 * k - 2 * m)) hm_lt
   rw [hsimp]
   have hd_ge_2 : 2 * k - 2 * m ≥ 2 := by omega
-  have hp_factor : ((2*k).choose (2*m) : ℚ) * (p : ℚ)^(2*k - 2*m) / (2*k - 2*m + 1) =
-                   (p : ℚ) * (((2*k).choose (2*m) : ℚ) * (p : ℚ)^(2*k - 2*m - 1) /
-                   (2*k - 2*m + 1)) := by
-    have hpow : (p : ℚ)^(2*k - 2*m) = (p : ℚ) * (p : ℚ)^(2*k - 2*m - 1) := by
-      have heq : (2*k - 2*m : ℕ) = (2*k - 2*m - 1) + 1 := by omega
+  have hp_factor : ((2 * k).choose (2 * m) : ℚ) * (p : ℚ) ^ (2 * k - 2 * m) / (2 * k - 2 * m + 1) =
+                   (p : ℚ) * (((2 * k).choose (2 * m) : ℚ) * (p : ℚ) ^ (2 * k - 2 * m - 1) /
+                   (2 * k - 2 * m + 1)) := by
+    have hpow : (p : ℚ) ^ (2 * k - 2 * m) = (p : ℚ) * (p : ℚ) ^ (2 * k - 2 * m - 1) := by
+      have heq : (2 * k - 2 * m : ℕ) = (2 * k - 2 * m - 1) + 1 := by omega
       conv_lhs => rw [heq]
       exact pow_succ' _ _
     rw [hpow]
@@ -1344,29 +1355,33 @@ lemma pIntegral_coeff_term (k m p : ℕ) (hk : k > 0) (hm_pos : m ≥ 1) (hm_lt 
 
 lemma pIntegral_first_term (k m p : ℕ) (hk : k > 0) (hm_pos : m ≥ 1) (hm_lt : m < k)
     (hp : p.Prime)
-    (ih : pIntegral p (bernoulli (2*m) + vonStaudtIndicator (2*m) p / p)) :
-    pIntegral p ((bernoulli (2*m) + vonStaudtIndicator (2*m) p / p) * ((2*k + 1).choose (2*m)) *
-      (p : ℚ)^(2*k - 2*m) / (2*k + 1)) := by
-  rw [show (bernoulli (2*m) + vonStaudtIndicator (2*m) p / p) * ((2*k + 1).choose (2*m)) *
-      (p : ℚ)^(2*k - 2*m) / (2*k + 1) = (bernoulli (2*m) + vonStaudtIndicator (2*m) p / p) *
-      (((2*k + 1).choose (2*m) : ℚ) * (p : ℚ)^(2*k - 2*m) / (2*k + 1)) by ring]
+    (ih : pIntegral p (bernoulli (2 * m) + vonStaudtIndicator (2 * m) p / p)) :
+    pIntegral p ((bernoulli (2 * m) +
+      vonStaudtIndicator (2 * m) p / p) *
+      ((2 * k + 1).choose (2 * m)) *
+      (p : ℚ) ^ (2 * k - 2 * m) / (2 * k + 1)) := by
+  rw [show (bernoulli (2 * m) + vonStaudtIndicator (2 * m) p / p) *
+      ((2 * k + 1).choose (2 * m)) *
+      (p : ℚ) ^ (2 * k - 2 * m) / (2 * k + 1) =
+      (bernoulli (2 * m) + vonStaudtIndicator (2 * m) p / p) *
+      (((2 * k + 1).choose (2 * m) : ℚ) * (p : ℚ) ^ (2 * k - 2 * m) / (2 * k + 1)) by ring]
   exact pIntegral_mul p _ _ ih (pIntegral_coeff_term k m p hk hm_pos hm_lt hp)
 
 lemma pIntegral_even_term_in_sum (k m p : ℕ) (hk : k > 0) (hm_pos : m ≥ 1) (hm_lt : m < k)
     (hp : p.Prime)
     (ih : pIntegral p
-      (bernoulli (2*m) + vonStaudtIndicator (2*m) p / p)) :
-    pIntegral p (bernoulli (2*m) * ((2*k + 1).choose (2*m)) *
-      (p : ℚ)^(2*k - 2*m) / (2*k + 1)) := by
+      (bernoulli (2 * m) + vonStaudtIndicator (2 * m) p / p)) :
+    pIntegral p (bernoulli (2 * m) * ((2 * k + 1).choose (2 * m)) *
+      (p : ℚ) ^ (2 * k - 2 * m) / (2 * k + 1)) := by
   rw [even_term_decomposition_identity k m p hk hm_pos hm_lt]
   exact pIntegral_sub p _ _ (pIntegral_first_term k m p hk hm_pos hm_lt hp ih)
     (pIntegral_second_term k m p hk hm_pos hm_lt hp)
 
 lemma pIntegral_remainder (k p : ℕ) (hk : k > 0) (hp : p.Prime)
     (ih : ∀ m, 0 < m → m < k →
-      pIntegral p (bernoulli (2*m) + vonStaudtIndicator (2*m) p / p)) :
-    pIntegral p (∑ i ∈ Finset.range (2*k),
-      bernoulli i * ((2*k + 1).choose i) * (p : ℚ)^(2*k - i) / (2*k + 1)) := by
+      pIntegral p (bernoulli (2 * m) + vonStaudtIndicator (2 * m) p / p)) :
+    pIntegral p (∑ i ∈ Finset.range (2 * k),
+      bernoulli i * ((2 * k + 1).choose i) * (p : ℚ) ^ (2 * k - i) / (2 * k + 1)) := by
   apply pIntegral_sum
   intro i hi
   rw [Finset.mem_range] at hi
@@ -1377,7 +1392,7 @@ lemma pIntegral_remainder (k p : ℕ) (hk : k > 0) (hp : p.Prime)
     exact pIntegral_i1_term_in_sum k p hk hp
   · set j := i + 2 with hj_def
     have hj_ge2 : j ≥ 2 := by omega
-    have hj_lt : j < 2*k := by omega
+    have hj_lt : j < 2 * k := by omega
     rcases Nat.even_or_odd j with ⟨m, hm⟩ | hodd
     · have hm_pos : m ≥ 1 := by omega
       have hm_lt : m < k := by omega
@@ -1391,14 +1406,15 @@ lemma pIntegral_remainder (k p : ℕ) (hk : k > 0) (hp : p.Prime)
       exact Nat.coprime_one_left_iff p |>.mpr trivial
 
 lemma power_sum_eq_faulhaber (k p : ℕ) :
-    (∑ v ∈ Finset.range p, (v : ℚ)^(2*k)) =
-    ∑ i ∈ Finset.range (2*k + 1), bernoulli i * ((2*k + 1).choose i) * (p : ℚ)^(2*k + 1 - i) /
-      (2*k + 1) := by
+    (∑ v ∈ Finset.range p, (v : ℚ) ^ (2 * k)) =
+    ∑ i ∈ Finset.range (2 * k + 1), bernoulli i *
+      ((2 * k + 1).choose i) *
+      (p : ℚ) ^ (2 * k + 1 - i) / (2 * k + 1) := by
   grind only [sum_range_pow]
 
 lemma faulhaber_top_term (k p : ℕ) :
-    bernoulli (2*k) * ((2*k + 1).choose (2*k)) * (p : ℚ)^(2*k + 1 - 2*k) / (2*k + 1) =
-    p * bernoulli (2*k) := by
+    bernoulli (2 * k) * ((2 * k + 1).choose (2 * k)) * (p : ℚ) ^ (2 * k + 1 - 2 * k) / (2 * k + 1) =
+    p * bernoulli (2 * k) := by
   have h1 : (2 * k + 1).choose (2 * k) = 2 * k + 1 := by
     have h2 : (2 * k + 1).choose (2 * k) = (2 * k + 1).choose 1 := by
       rw [← Nat.choose_symm_of_eq_add]
@@ -1423,23 +1439,24 @@ lemma int_indicator_cast_eq_zmod (p l : ℕ) :
   split_ifs with h <;> simp [Int.cast_one, Int.cast_zero]
 
 lemma power_sum_indicator_divisible_by_p (k p : ℕ) (_hk : k > 0) (hp : p.Prime) :
-    ∃ T : ℤ, (∑ v ∈ Finset.range p with v ≠ 0, (v : ℤ)^(2*k)) +
-    (if (p - 1 : ℕ) ∣ (2*k) then 1 else 0) = p * T := by
-  have h_cast : (↑((∑ v ∈ Finset.range p with v ≠ 0, (v : ℤ)^(2*k)) +
-      (if (p - 1 : ℕ) ∣ (2*k) then 1 else 0)) : ZMod p) = 0 := by
+    ∃ T : ℤ, (∑ v ∈ Finset.range p with v ≠ 0, (v : ℤ) ^ (2 * k)) +
+    (if (p - 1 : ℕ) ∣ (2 * k) then 1 else 0) = p * T := by
+  have h_cast : (↑((∑ v ∈ Finset.range p with v ≠ 0, (v : ℤ) ^ (2 * k)) +
+      (if (p - 1 : ℕ) ∣ (2 * k) then 1 else 0)) : ZMod p) = 0 := by
     simp only [Int.cast_add]
     rw [int_sum_cast_eq_zmod_sum, int_indicator_cast_eq_zmod]
-    exact power_sum_add_indicator_eq_zero p (2*k) hp
+    exact power_sum_add_indicator_eq_zero p (2 * k) hp
   rw [ZMod.intCast_zmod_eq_zero_iff_dvd] at h_cast
   exact h_cast
 
 lemma faulhaber_split_top_term (k p : ℕ) :
-    (∑ i ∈ Finset.range (2*k + 1),
-      bernoulli i * ((2*k + 1).choose i) * (p : ℚ)^(2*k + 1 - i) /
-      (2*k + 1)) =
-    (∑ i ∈ Finset.range (2*k), bernoulli i * ((2*k + 1).choose i) * (p : ℚ)^(2*k + 1 - i) /
-      (2*k + 1)) +
-    bernoulli (2*k) * ((2*k + 1).choose (2*k)) * (p : ℚ)^(2*k + 1 - 2*k) / (2*k + 1) := by
+    (∑ i ∈ Finset.range (2 * k + 1),
+      bernoulli i * ((2 * k + 1).choose i) * (p : ℚ) ^ (2 * k + 1 - i) /
+      (2 * k + 1)) =
+    (∑ i ∈ Finset.range (2 * k), bernoulli i * ((2 * k + 1).choose i) * (p : ℚ) ^ (2 * k + 1 - i) /
+      (2 * k + 1)) +
+    bernoulli (2 * k) * ((2 * k + 1).choose (2 * k)) *
+      (p : ℚ) ^ (2 * k + 1 - 2 * k) / (2 * k + 1) := by
   have h3 : Finset.range (2 * k + 1) = Finset.range (2 * k) ∪ {2 * k} := by
     ext x; simp [Finset.mem_range]; omega
   have h4 : Disjoint (Finset.range (2 * k)) ({2 * k} : Finset ℕ) := by
@@ -1447,10 +1464,10 @@ lemma faulhaber_split_top_term (k p : ℕ) :
   rw [h3, Finset.sum_union h4, Finset.sum_singleton]
 
 lemma rat_power_sum_eq_filter_ne_zero (k p : ℕ) (hk : k > 0) :
-    (∑ v ∈ Finset.range p, (v : ℚ)^(2*k)) =
-      ∑ v ∈ Finset.range p with v ≠ 0, (v : ℚ)^(2*k) := by
-  have h1 : (∑ v ∈ Finset.range p, (v : ℚ)^(2*k)) =
-      ∑ v ∈ Finset.range p, if v = 0 then 0 else (v : ℚ)^(2*k) := by
+    (∑ v ∈ Finset.range p, (v : ℚ) ^ (2 * k)) =
+      ∑ v ∈ Finset.range p with v ≠ 0, (v : ℚ) ^ (2 * k) := by
+  have h1 : (∑ v ∈ Finset.range p, (v : ℚ) ^ (2 * k)) =
+      ∑ v ∈ Finset.range p, if v = 0 then 0 else (v : ℚ) ^ (2 * k) := by
     apply Finset.sum_congr rfl
     intro v _
     by_cases h : v = 0
@@ -1459,27 +1476,27 @@ lemma rat_power_sum_eq_filter_ne_zero (k p : ℕ) (hk : k > 0) :
       simp [this]
     · have h2 : (v : ℚ) ≠ 0 := by norm_cast
       simp [h]
-  have h2 : ∑ v ∈ Finset.range p, (if v = 0 then 0 else (v : ℚ)^(2*k)) =
-      ∑ v ∈ Finset.filter (· ≠ 0) (Finset.range p), (v : ℚ)^(2*k) := by
-    calc ∑ v ∈ Finset.range p, (if v = 0 then 0 else (v : ℚ)^(2*k)) =
-        ∑ v ∈ Finset.range p, (if v ≠ 0 then (v : ℚ)^(2*k) else 0) := by
+  have h2 : ∑ v ∈ Finset.range p, (if v = 0 then 0 else (v : ℚ) ^ (2 * k)) =
+      ∑ v ∈ Finset.filter (· ≠ 0) (Finset.range p), (v : ℚ) ^ (2 * k) := by
+    calc ∑ v ∈ Finset.range p, (if v = 0 then 0 else (v : ℚ) ^ (2 * k)) =
+        ∑ v ∈ Finset.range p, (if v ≠ 0 then (v : ℚ) ^ (2 * k) else 0) := by
           apply Finset.sum_congr rfl
           intro v _
           by_cases h : v = 0 <;> simp [h]
-      _ = ∑ v ∈ Finset.filter (· ≠ 0) (Finset.range p), (v : ℚ)^(2*k) := by
+      _ = ∑ v ∈ Finset.filter (· ≠ 0) (Finset.range p), (v : ℚ) ^ (2 * k) := by
         rw [Finset.sum_filter]
-  have h3 : ∑ v ∈ Finset.filter (· ≠ 0) (Finset.range p), (v : ℚ)^(2*k) =
-      ∑ v ∈ Finset.range p with v ≠ 0, (v : ℚ)^(2*k) := by simp [Finset.sum_filter]
-  calc (∑ v ∈ Finset.range p, (v : ℚ)^(2*k)) =
-      ∑ v ∈ Finset.range p, (if v = 0 then 0 else (v : ℚ)^(2*k)) := by rw [h1]
-    _ = ∑ v ∈ Finset.filter (· ≠ 0) (Finset.range p), (v : ℚ)^(2*k) := by rw [h2]
-    _ = ∑ v ∈ Finset.range p with v ≠ 0, (v : ℚ)^(2*k) := by rw [h3]
+  have h3 : ∑ v ∈ Finset.filter (· ≠ 0) (Finset.range p), (v : ℚ) ^ (2 * k) =
+      ∑ v ∈ Finset.range p with v ≠ 0, (v : ℚ) ^ (2 * k) := by simp [Finset.sum_filter]
+  calc (∑ v ∈ Finset.range p, (v : ℚ) ^ (2 * k)) =
+      ∑ v ∈ Finset.range p, (if v = 0 then 0 else (v : ℚ) ^ (2 * k)) := by rw [h1]
+    _ = ∑ v ∈ Finset.filter (· ≠ 0) (Finset.range p), (v : ℚ) ^ (2 * k) := by rw [h2]
+    _ = ∑ v ∈ Finset.range p with v ≠ 0, (v : ℚ) ^ (2 * k) := by rw [h3]
 
 lemma remainder_div_p (k p : ℕ) (hp : p.Prime) :
-    (∑ i ∈ Finset.range (2*k), bernoulli i * ((2*k + 1).choose i) * (p : ℚ)^(2*k + 1 - i) /
-      (2*k + 1)) / p =
-    (∑ i ∈ Finset.range (2*k), bernoulli i * ((2*k + 1).choose i) * (p : ℚ)^(2*k - i) /
-      (2*k + 1)) := by
+    (∑ i ∈ Finset.range (2 * k), bernoulli i * ((2 * k + 1).choose i) * (p : ℚ) ^ (2 * k + 1 - i) /
+      (2 * k + 1)) / p =
+    (∑ i ∈ Finset.range (2 * k), bernoulli i * ((2 * k + 1).choose i) * (p : ℚ) ^ (2 * k - i) /
+      (2 * k + 1)) := by
   have h0 : (∑ i ∈ Finset.range (2 * k), (bernoulli i : ℚ) * ((2 * k + 1).choose i : ℚ) *
       (p : ℚ) ^ (2 * k + 1 - i) / (2 * k + 1 : ℚ)) / (p : ℚ) =
       ∑ i ∈ Finset.range (2 * k), (bernoulli i : ℚ) * ((2 * k + 1).choose i : ℚ) *
@@ -1506,76 +1523,95 @@ lemma remainder_div_p (k p : ℕ) (hp : p.Prime) :
   exact_mod_cast h0
 
 lemma algebraic_rearrangement (k p : ℕ) (T : ℤ) (hp : p.Prime)
-    (hT' : (∑ v ∈ Finset.range p with v ≠ 0, (v : ℚ)^(2*k)) + vonStaudtIndicator (2*k) p =
+    (hT' : (∑ v ∈ Finset.range p with v ≠ 0, (v : ℚ) ^ (2 * k)) + vonStaudtIndicator (2 * k) p =
       (p : ℚ) * (T : ℚ))
-    (hFaul : (∑ v ∈ Finset.range p with v ≠ 0, (v : ℚ)^(2*k)) =
-             (∑ i ∈ Finset.range (2*k), bernoulli i * ((2*k + 1).choose i) * (p : ℚ)^(2*k + 1 - i) /
-               (2*k + 1)) + p * bernoulli (2*k)) :
-    bernoulli (2*k) + vonStaudtIndicator (2*k) p / p =
-    T - (∑ i ∈ Finset.range (2*k), bernoulli i * ((2*k + 1).choose i) * (p : ℚ)^(2*k + 1 - i) /
-      (2*k + 1)) / p := by
-  have h7 : bernoulli (2*k) + (1 / (p : ℚ)) * vonStaudtIndicator (2*k) p =
-      (T : ℚ) - (1 / (p : ℚ)) * (∑ i ∈ Finset.range (2*k), bernoulli i * ((2*k + 1).choose i) *
-      (p : ℚ)^(2*k + 1 - i) / (2*k + 1)) := by
+    (hFaul : (∑ v ∈ Finset.range p with v ≠ 0,
+        (v : ℚ) ^ (2 * k)) =
+             (∑ i ∈ Finset.range (2 * k), bernoulli i *
+               ((2 * k + 1).choose i) *
+               (p : ℚ) ^ (2 * k + 1 - i) /
+               (2 * k + 1)) + p * bernoulli (2 * k)) :
+    bernoulli (2 * k) + vonStaudtIndicator (2 * k) p / p =
+    T - (∑ i ∈ Finset.range (2 * k), bernoulli i *
+      ((2 * k + 1).choose i) *
+      (p : ℚ) ^ (2 * k + 1 - i) / (2 * k + 1)) / p := by
+  have h7 : bernoulli (2 * k) +
+      (1 / (p : ℚ)) * vonStaudtIndicator (2 * k) p =
+      (T : ℚ) - (1 / (p : ℚ)) *
+      (∑ i ∈ Finset.range (2 * k), bernoulli i *
+        ((2 * k + 1).choose i) *
+        (p : ℚ) ^ (2 * k + 1 - i) / (2 * k + 1)) := by
     have h8 : (p : ℚ) ≠ 0 := by norm_cast; simp_all [hp.ne_zero]
-    have h9 : (p : ℚ) * bernoulli (2*k) + (p : ℚ) * ((1 / (p : ℚ)) * vonStaudtIndicator (2*k) p) =
-        (p : ℚ) * ((T : ℚ) - (1 / (p : ℚ)) * (∑ i ∈ Finset.range (2*k), bernoulli i *
-        ((2*k + 1).choose i) * (p : ℚ)^(2*k + 1 - i) / (2*k + 1))) := by
-      calc (p : ℚ) * bernoulli (2*k) + (p : ℚ) * ((1 / (p : ℚ)) * vonStaudtIndicator (2*k) p) =
-          (p : ℚ) * bernoulli (2*k) + vonStaudtIndicator (2*k) p := by field_simp [h8]
-        _ = (p : ℚ) * bernoulli (2*k) + vonStaudtIndicator (2*k) p := by rfl
-        _ = (p : ℚ) * (T : ℚ) - (∑ i ∈ Finset.range (2*k), bernoulli i * ((2*k + 1).choose i) *
-            (p : ℚ)^(2*k + 1 - i) / (2*k + 1)) := by linarith
-        _ = (p : ℚ) * ((T : ℚ) - (1 / (p : ℚ)) * (∑ i ∈ Finset.range (2*k), bernoulli i *
-            ((2*k + 1).choose i) * (p : ℚ)^(2*k + 1 - i) / (2*k + 1))) := by field_simp [h8]
-    have h11 : bernoulli (2*k) + (1 / (p : ℚ)) * vonStaudtIndicator (2*k) p =
-        (T : ℚ) - (1 / (p : ℚ)) * (∑ i ∈ Finset.range (2*k), bernoulli i * ((2*k + 1).choose i) *
-        (p : ℚ)^(2*k + 1 - i) / (2*k + 1)) := by
+    have h9 : (p : ℚ) * bernoulli (2 * k) +
+        (p : ℚ) * ((1 / (p : ℚ)) *
+          vonStaudtIndicator (2 * k) p) =
+        (p : ℚ) * ((T : ℚ) - (1 / (p : ℚ)) *
+          (∑ i ∈ Finset.range (2 * k), bernoulli i *
+            ((2 * k + 1).choose i) *
+            (p : ℚ) ^ (2 * k + 1 - i) /
+            (2 * k + 1))) := by
+      calc (p : ℚ) * bernoulli (2 * k) + (p : ℚ) * ((1 / (p : ℚ)) * vonStaudtIndicator (2 * k) p) =
+          (p : ℚ) * bernoulli (2 * k) + vonStaudtIndicator (2 * k) p := by field_simp [h8]
+        _ = (p : ℚ) * bernoulli (2 * k) + vonStaudtIndicator (2 * k) p := by rfl
+        _ = (p : ℚ) * (T : ℚ) - (∑ i ∈ Finset.range (2 * k), bernoulli i * ((2 * k + 1).choose i) *
+            (p : ℚ) ^ (2 * k + 1 - i) / (2 * k + 1)) := by linarith
+        _ = (p : ℚ) * ((T : ℚ) - (1 / (p : ℚ)) * (∑ i ∈ Finset.range (2 * k), bernoulli i *
+            ((2 * k + 1).choose i) * (p : ℚ) ^ (2 * k + 1 - i) / (2 * k + 1))) := by field_simp [h8]
+    have h11 : bernoulli (2 * k) +
+        (1 / (p : ℚ)) * vonStaudtIndicator (2 * k) p =
+        (T : ℚ) - (1 / (p : ℚ)) *
+        (∑ i ∈ Finset.range (2 * k), bernoulli i *
+          ((2 * k + 1).choose i) *
+          (p : ℚ) ^ (2 * k + 1 - i) / (2 * k + 1)) := by
       apply mul_left_cancel₀ (show (p : ℚ) ≠ 0 by exact_mod_cast hp.ne_zero)
       linarith
     linarith
-  have h8 : bernoulli (2*k) + vonStaudtIndicator (2*k) p / p =
-      T - (∑ i ∈ Finset.range (2*k), bernoulli i * ((2*k + 1).choose i) * (p : ℚ)^(2*k + 1 - i) /
-      (2*k + 1)) / p := by
+  have h8 : bernoulli (2 * k) + vonStaudtIndicator (2 * k) p / p =
+      T - (∑ i ∈ Finset.range (2 * k), bernoulli i *
+        ((2 * k + 1).choose i) *
+        (p : ℚ) ^ (2 * k + 1 - i) / (2 * k + 1)) / p := by
     have h9 : (p : ℚ) ≠ 0 := by norm_cast; simp_all [hp.ne_zero]
-    calc bernoulli (2*k) + vonStaudtIndicator (2*k) p / p =
-        bernoulli (2*k) + (1 / (p : ℚ)) * vonStaudtIndicator (2*k) p := by field_simp [h9]
-      _ = (T : ℚ) - (1 / (p : ℚ)) * (∑ i ∈ Finset.range (2*k), bernoulli i * ((2*k + 1).choose i) *
-          (p : ℚ)^(2*k + 1 - i) / (2*k + 1)) := by exact h7
-      _ = T - (∑ i ∈ Finset.range (2*k), bernoulli i * ((2*k + 1).choose i) *
-          (p : ℚ)^(2*k + 1 - i) / (2*k + 1)) / p := by field_simp [h9]
+    calc bernoulli (2 * k) + vonStaudtIndicator (2 * k) p / p =
+        bernoulli (2 * k) + (1 / (p : ℚ)) * vonStaudtIndicator (2 * k) p := by field_simp [h9]
+      _ = (T : ℚ) - (1 / (p : ℚ)) *
+          (∑ i ∈ Finset.range (2 * k), bernoulli i *
+            ((2 * k + 1).choose i) * (p : ℚ) ^ (2 * k + 1 - i) /
+            (2 * k + 1)) := by exact h7
+      _ = T - (∑ i ∈ Finset.range (2 * k), bernoulli i * ((2 * k + 1).choose i) *
+          (p : ℚ) ^ (2 * k + 1 - i) / (2 * k + 1)) / p := by field_simp [h9]
   exact h8
 
 lemma divisibility_to_rat_eq (k p : ℕ) (T : ℤ) (_hp : p.Prime)
-    (hT : (∑ v ∈ Finset.range p with v ≠ 0, (v : ℤ)^(2*k)) +
-          (if (p - 1 : ℕ) ∣ (2*k) then 1 else 0) = p * T) :
-    (∑ v ∈ Finset.range p with v ≠ 0, (v : ℚ)^(2*k)) + vonStaudtIndicator (2*k) p = p * T := by
-  have h1 : ((∑ v ∈ Finset.range p with v ≠ 0, (v : ℤ)^(2*k)) : ℚ) =
-      ∑ v ∈ Finset.range p with v ≠ 0, (v : ℚ)^(2*k) := by norm_cast
-  have h2 : ((if (p - 1 : ℕ) ∣ (2*k) then (1 : ℤ) else (0 : ℤ)) : ℚ) =
-      vonStaudtIndicator (2*k) p := by
+    (hT : (∑ v ∈ Finset.range p with v ≠ 0, (v : ℤ) ^ (2 * k)) +
+          (if (p - 1 : ℕ) ∣ (2 * k) then 1 else 0) = p * T) :
+    (∑ v ∈ Finset.range p with v ≠ 0, (v : ℚ) ^ (2 * k)) +
+      vonStaudtIndicator (2 * k) p = p * T := by
+  have h1 : ((∑ v ∈ Finset.range p with v ≠ 0, (v : ℤ) ^ (2 * k)) : ℚ) =
+      ∑ v ∈ Finset.range p with v ≠ 0, (v : ℚ) ^ (2 * k) := by norm_cast
+  have h2 : ((if (p - 1 : ℕ) ∣ (2 * k) then (1 : ℤ) else (0 : ℤ)) : ℚ) =
+      vonStaudtIndicator (2 * k) p := by
     split_ifs at * <;> simp_all [vonStaudtIndicator]
   have h3 : ((p : ℤ) * T : ℚ) = p * T := by norm_cast
-  have h4 : ((∑ v ∈ Finset.range p with v ≠ 0, (v : ℤ)^(2*k)) : ℚ) +
-      ((if (p - 1 : ℕ) ∣ (2*k) then (1 : ℤ) else (0 : ℤ)) : ℚ) = (p : ℚ) * T := by
+  have h4 : ((∑ v ∈ Finset.range p with v ≠ 0, (v : ℤ) ^ (2 * k)) : ℚ) +
+      ((if (p - 1 : ℕ) ∣ (2 * k) then (1 : ℤ) else (0 : ℤ)) : ℚ) = (p : ℚ) * T := by
     norm_cast at hT ⊢
-  calc (∑ v ∈ Finset.range p with v ≠ 0, (v : ℚ)^(2*k)) + vonStaudtIndicator (2*k) p =
-      ((∑ v ∈ Finset.range p with v ≠ 0, (v : ℤ)^(2*k)) : ℚ) +
-      ((if (p - 1 : ℕ) ∣ (2*k) then (1 : ℤ) else (0 : ℤ)) : ℚ) := by rw [h1, h2]
+  calc (∑ v ∈ Finset.range p with v ≠ 0, (v : ℚ) ^ (2 * k)) + vonStaudtIndicator (2 * k) p =
+      ((∑ v ∈ Finset.range p with v ≠ 0, (v : ℤ) ^ (2 * k)) : ℚ) +
+      ((if (p - 1 : ℕ) ∣ (2 * k) then (1 : ℤ) else (0 : ℤ)) : ℚ) := by rw [h1, h2]
     _ = (p : ℚ) * T := by rw [h4]
     _ = p * T := by simp
 
 lemma bernoulli_plus_indicator_rearrangement (k p : ℕ) (hk : k > 0) (hp : p.Prime) :
-    ∃ T : ℤ, bernoulli (2*k) + vonStaudtIndicator (2*k) p / p =
-      T - (∑ i ∈ Finset.range (2*k),
-        bernoulli i * ((2*k + 1).choose i) * (p : ℚ)^(2*k - i) / (2*k + 1)) := by
+    ∃ T : ℤ, bernoulli (2 * k) + vonStaudtIndicator (2 * k) p / p =
+      T - (∑ i ∈ Finset.range (2 * k),
+        bernoulli i * ((2 * k + 1).choose i) * (p : ℚ) ^ (2 * k - i) / (2 * k + 1)) := by
   obtain ⟨T, hT⟩ := power_sum_indicator_divisible_by_p k p hk hp
   use T
-  have hT' : (∑ v ∈ Finset.range p with v ≠ 0, (v : ℚ)^(2*k)) + vonStaudtIndicator (2*k) p =
+  have hT' : (∑ v ∈ Finset.range p with v ≠ 0, (v : ℚ) ^ (2 * k)) + vonStaudtIndicator (2 * k) p =
       p * T := divisibility_to_rat_eq k p T hp hT
-  have hFaul : (∑ v ∈ Finset.range p with v ≠ 0, (v : ℚ)^(2*k)) =
-               (∑ i ∈ Finset.range (2*k), bernoulli i * ((2*k + 1).choose i) *
-                (p : ℚ)^(2*k + 1 - i) / (2*k + 1)) + p * bernoulli (2*k) := by
+  have hFaul : (∑ v ∈ Finset.range p with v ≠ 0, (v : ℚ) ^ (2 * k)) =
+               (∑ i ∈ Finset.range (2 * k), bernoulli i * ((2 * k + 1).choose i) *
+                (p : ℚ) ^ (2 * k + 1 - i) / (2 * k + 1)) + p * bernoulli (2 * k) := by
     rw [← rat_power_sum_eq_filter_ne_zero k p hk, power_sum_eq_faulhaber,
         faulhaber_split_top_term, faulhaber_top_term]
   have hAlg := algebraic_rearrangement k p T hp hT' hFaul
@@ -1588,8 +1624,8 @@ lemma bernoulli_plus_indicator_coprime_p_pos (k p : ℕ) (hk : k > 0) (hp : p.Pr
     obtain ⟨T, hT⟩ := bernoulli_plus_indicator_rearrangement k p hk hp
     rw [hT]
     have hT_int : pIntegral p (T : ℚ) := pIntegral_of_int p T
-    have hR : pIntegral p (∑ i ∈ Finset.range (2*k),
-        bernoulli i * ((2*k + 1).choose i) * (p : ℚ)^(2*k - i) / (2*k + 1)) := by
+    have hR : pIntegral p (∑ i ∈ Finset.range (2 * k),
+        bernoulli i * ((2 * k + 1).choose i) * (p : ℚ) ^ (2 * k - i) / (2 * k + 1)) := by
       apply pIntegral_remainder k p hk hp
       intro m hm_pos hm_lt
       exact ih m hm_lt hm_pos
