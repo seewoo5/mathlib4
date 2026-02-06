@@ -582,21 +582,14 @@ lemma prod_den_coprime_p (k p : ℕ) (hp : p.Prime) :
 
 lemma sum_primes_eq_indicator_add_rest (k p : ℕ) (hk : k > 0) (hp : p.Prime) :
     (∑ q ∈ Finset.range (2 * k + 2) with q.Prime ∧ (q - 1) ∣ 2 * k, (1 : ℚ) / q) =
-    vonStaudtIndicator (2 * k) p / p +
-    ∑ q ∈ Finset.range (2 * k + 2) with
+    vonStaudtIndicator (2 * k) p / p + ∑ q ∈ Finset.range (2 * k + 2) with
       q.Prime ∧ (q - 1) ∣ 2 * k ∧ q ≠ p, (1 : ℚ) / q := by
-  have h3 :
-      ∑ q ∈ Finset.range (2 * k + 2) with
-        q.Prime ∧ (q - 1) ∣ 2 * k, (1 : ℚ) / q =
-      (if (p.Prime ∧ (p - 1) ∣ 2 * k ∧ p < 2 * k + 2)
-        then (1 : ℚ) / p else 0) +
-      ∑ q ∈ Finset.range (2 * k + 2) with
-        q.Prime ∧ (q - 1) ∣ 2 * k ∧ q ≠ p, (1 : ℚ) / q := by
-    have h4 :
-        (∑ q ∈ Finset.range (2 * k + 2) with
-          q.Prime ∧ (q - 1) ∣ 2 * k, (1 : ℚ) / q) =
-        ∑ q ∈ Finset.filter (fun q => q.Prime ∧ (q - 1) ∣ 2 * k)
-          (Finset.range (2 * k + 2)), (1 : ℚ) / q := rfl
+  have h3 : ∑ q ∈ Finset.range (2 * k + 2) with q.Prime ∧ (q - 1) ∣ 2 * k, (1 : ℚ) / q =
+    (if (p.Prime ∧ (p - 1) ∣ 2 * k ∧ p < 2 * k + 2) then (1 : ℚ) / p else 0) +
+      ∑ q ∈ Finset.range (2 * k + 2) with q.Prime ∧ (q - 1) ∣ 2 * k ∧ q ≠ p, (1 : ℚ) / q := by
+    have h4 : (∑ q ∈ Finset.range (2 * k + 2) with q.Prime ∧ (q - 1) ∣ 2 * k, (1 : ℚ) / q) =
+      ∑ q ∈ Finset.filter (fun q => q.Prime ∧ (q - 1) ∣ 2 * k)
+        (Finset.range (2 * k + 2)), (1 : ℚ) / q := rfl
     rw [h4]
     have h5 : p < 2 * k + 2 ∨ ¬(p.Prime ∧ (p - 1) ∣ 2 * k ∧ p < 2 * k + 2) := by
       by_cases h51 : p < 2 * k + 2
@@ -609,12 +602,9 @@ lemma sum_primes_eq_indicator_add_rest (k p : ℕ) (hk : k > 0) (hp : p.Prime) :
           (Finset.range (2 * k + 2)) ↔ p.Prime ∧ (p - 1) ∣ 2 * k := by
         simp [Finset.mem_filter, Finset.mem_range]
         tauto
-      have h9 : (if (p.Prime ∧ (p - 1) ∣ 2 * k ∧ p < 2 * k + 2)
-          then (1 : ℚ) / p else 0) =
-          (if (p.Prime ∧ (p - 1) ∣ 2 * k)
-          then (1 : ℚ) / p else 0) := by
-        have h10 : (p.Prime ∧ (p - 1) ∣ 2 * k ∧ p < 2 * k + 2) ↔
-            (p.Prime ∧ (p - 1) ∣ 2 * k) := by
+      have h9 : (if (p.Prime ∧ (p - 1) ∣ 2 * k ∧ p < 2 * k + 2) then (1 : ℚ) / p else 0) =
+          (if (p.Prime ∧ (p - 1) ∣ 2 * k) then (1 : ℚ) / p else 0) := by
+        have h10 : (p.Prime ∧ (p - 1) ∣ 2 * k ∧ p < 2 * k + 2) ↔ (p.Prime ∧ (p - 1) ∣ 2 * k) := by
           constructor <;> intro h11
           · exact ⟨h11.1, h11.2.1⟩
           · exact ⟨h11.1, h11.2, by omega⟩
@@ -625,76 +615,53 @@ lemma sum_primes_eq_indicator_add_rest (k p : ℕ) (hk : k > 0) (hp : p.Prime) :
             (Finset.range (2 * k + 2)) := by
           simp [Finset.mem_filter, Finset.mem_range] at h8 ⊢
           tauto
-        have h14 : ∑ q ∈ Finset.filter
-            (fun q => q.Prime ∧ (q - 1) ∣ 2 * k)
-            (Finset.range (2 * k + 2)), (1 : ℚ) / q =
-            ∑ q ∈ (Finset.filter
-              (fun q => q.Prime ∧ (q - 1) ∣ 2 * k)
-              (Finset.range (2 * k + 2))).erase p,
+        have h14 : ∑ q ∈ Finset.filter (fun q => q.Prime ∧ (q - 1) ∣ 2 * k)
+          (Finset.range (2 * k + 2)), (1 : ℚ) / q = ∑ q ∈ (Finset.filter
+            (fun q => q.Prime ∧ (q - 1) ∣ 2 * k) (Finset.range (2 * k + 2))).erase p,
             (1 : ℚ) / q + (1 : ℚ) / p := by
           rw [← Finset.insert_erase h13, Finset.sum_insert (Finset.notMem_erase p _)]
           simp_all [Finset.mem_filter, Finset.mem_range]
-        have h17 : ∑ q ∈ (Finset.filter
-            (fun q => q.Prime ∧ (q - 1) ∣ 2 * k)
-            (Finset.range (2 * k + 2))).erase p,
-            (1 : ℚ) / q =
-            ∑ q ∈ Finset.filter
-              (fun q => q.Prime ∧ (q - 1) ∣ 2 * k ∧ q ≠ p)
-              (Finset.range (2 * k + 2)),
-            (1 : ℚ) / q := by
-          have h18 : (Finset.filter
-              (fun q => q.Prime ∧ (q - 1) ∣ 2 * k)
-              (Finset.range (2 * k + 2))).erase p =
-              Finset.filter
-                (fun q => q.Prime ∧ (q - 1) ∣ 2 * k ∧ q ≠ p)
-                (Finset.range (2 * k + 2)) := by
+        have h17 : ∑ q ∈ (Finset.filter (fun q => q.Prime ∧ (q - 1) ∣ 2 * k)
+          (Finset.range (2 * k + 2))).erase p, (1 : ℚ) / q =
+            ∑ q ∈ Finset.filter (fun q => q.Prime ∧ (q - 1) ∣ 2 * k ∧ q ≠ p)
+              (Finset.range (2 * k + 2)), (1 : ℚ) / q := by
+          have h18 : (Finset.filter (fun q => q.Prime ∧ (q - 1) ∣ 2 * k)
+              (Finset.range (2 * k + 2))).erase p = Finset.filter
+                (fun q => q.Prime ∧ (q - 1) ∣ 2 * k ∧ q ≠ p) (Finset.range (2 * k + 2)) := by
             apply Finset.ext
             intro q
             simp only [Finset.mem_filter, Finset.mem_erase, Finset.mem_range]
             cases q <;> simp_all [Nat.Prime]
             tauto
           rw [h18]
-        have h19 : (if (p.Prime ∧ (p - 1) ∣ 2 * k)
-            then (1 : ℚ) / p else 0) = (1 : ℚ) / p := by
+        have h19 : (if (p.Prime ∧ (p - 1) ∣ 2 * k) then (1 : ℚ) / p else 0) = (1 : ℚ) / p := by
           simp [h10]
         rw [h14, h17, h19]
         ring_nf
-      · have h13 : ∑ q ∈ Finset.filter
-            (fun q => q.Prime ∧ (q - 1) ∣ 2 * k)
+      · have h13 : ∑ q ∈ Finset.filter (fun q => q.Prime ∧ (q - 1) ∣ 2 * k)
             (Finset.range (2 * k + 2)), (1 : ℚ) / q =
-            ∑ q ∈ Finset.filter
-              (fun q => q.Prime ∧ (q - 1) ∣ 2 * k ∧ q ≠ p)
-              (Finset.range (2 * k + 2)),
-            (1 : ℚ) / q := by
-          have h14 : Finset.filter
-              (fun q => q.Prime ∧ (q - 1) ∣ 2 * k)
+            ∑ q ∈ Finset.filter (fun q => q.Prime ∧ (q - 1) ∣ 2 * k ∧ q ≠ p)
+              (Finset.range (2 * k + 2)), (1 : ℚ) / q := by
+          have h14 : Finset.filter (fun q => q.Prime ∧ (q - 1) ∣ 2 * k)
               (Finset.range (2 * k + 2)) =
-              Finset.filter
-                (fun q => q.Prime ∧ (q - 1) ∣ 2 * k ∧ q ≠ p)
+              Finset.filter (fun q => q.Prime ∧ (q - 1) ∣ 2 * k ∧ q ≠ p)
                 (Finset.range (2 * k + 2)) := by
             apply Finset.ext
             intro q
             simp only [Finset.mem_filter, Finset.mem_range]
             by_cases hq : q = p <;> simp_all [Nat.Prime]
           rw [h14]
-        have h15 : (if (p.Prime ∧ (p - 1) ∣ 2 * k)
-            then (1 : ℚ) / p else 0) = 0 := by
+        have h15 : (if (p.Prime ∧ (p - 1) ∣ 2 * k) then (1 : ℚ) / p else 0) = 0 := by
           simp [h10]
         rw [h13, h15]
         ring_nf
     | inr h5 =>
       have h8 : ∑ q ∈ Finset.filter
-          (fun q => q.Prime ∧ (q - 1) ∣ 2 * k)
-          (Finset.range (2 * k + 2)), (1 : ℚ) / q =
-          ∑ q ∈ Finset.filter
-            (fun q => q.Prime ∧ (q - 1) ∣ 2 * k ∧ q ≠ p)
-            (Finset.range (2 * k + 2)),
-          (1 : ℚ) / q := by
-        have h9 : Finset.filter
-            (fun q => q.Prime ∧ (q - 1) ∣ 2 * k)
-            (Finset.range (2 * k + 2)) =
-            Finset.filter
-              (fun q => q.Prime ∧ (q - 1) ∣ 2 * k ∧ q ≠ p)
+          (fun q => q.Prime ∧ (q - 1) ∣ 2 * k) (Finset.range (2 * k + 2)), (1 : ℚ) / q =
+          ∑ q ∈ Finset.filter (fun q => q.Prime ∧ (q - 1) ∣ 2 * k ∧ q ≠ p)
+            (Finset.range (2 * k + 2)), (1 : ℚ) / q := by
+        have h9 : Finset.filter (fun q => q.Prime ∧ (q - 1) ∣ 2 * k) (Finset.range (2 * k + 2)) =
+            Finset.filter (fun q => q.Prime ∧ (q - 1) ∣ 2 * k ∧ q ≠ p)
               (Finset.range (2 * k + 2)) := by
           apply Finset.ext
           intro q
@@ -702,8 +669,7 @@ lemma sum_primes_eq_indicator_add_rest (k p : ℕ) (hk : k > 0) (hp : p.Prime) :
           by_cases hq : q = p <;> simp_all [Nat.Prime]
           omega
         rw [h9]
-      have h9 : (if (p.Prime ∧ (p - 1) ∣ 2 * k ∧ p < 2 * k + 2)
-          then (1 : ℚ) / p else 0) = 0 := by
+      have h9 : (if (p.Prime ∧ (p - 1) ∣ 2 * k ∧ p < 2 * k + 2) then (1 : ℚ) / p else 0) = 0 := by
         simp [h5]
       rw [h8, h9]
       ring_nf
@@ -730,15 +696,10 @@ lemma sum_primes_eq_indicator_add_rest (k p : ℕ) (hk : k > 0) (hp : p.Prime) :
       rw [h8, h9]
   calc (∑ q ∈ Finset.range (2 * k + 2) with
         q.Prime ∧ (q - 1) ∣ 2 * k, (1 : ℚ) / q) =
-      (if (p.Prime ∧ (p - 1) ∣ 2 * k ∧ p < 2 * k + 2)
-        then (1 : ℚ) / p else 0) +
-        ∑ q ∈ Finset.range (2 * k + 2) with
-          q.Prime ∧ (q - 1) ∣ 2 * k ∧ q ≠ p,
-        (1 : ℚ) / q := h3
-    _ = vonStaudtIndicator (2 * k) p / p +
-        ∑ q ∈ Finset.range (2 * k + 2) with
-          q.Prime ∧ (q - 1) ∣ 2 * k ∧ q ≠ p,
-        (1 : ℚ) / q := by rw [h4]
+      (if (p.Prime ∧ (p - 1) ∣ 2 * k ∧ p < 2 * k + 2) then (1 : ℚ) / p else 0) +
+        ∑ q ∈ Finset.range (2 * k + 2) with q.Prime ∧ (q - 1) ∣ 2 * k ∧ q ≠ p, (1 : ℚ) / q := h3
+    _ = vonStaudtIndicator (2 * k) p / p + ∑ q ∈ Finset.range (2 * k + 2) with
+          q.Prime ∧ (q - 1) ∣ 2 * k ∧ q ≠ p, (1 : ℚ) / q := by rw [h4]
 
 lemma pIntegral_of_int (p : ℕ) (z : ℤ) : pIntegral p z := by simp_all [pIntegral]
 
