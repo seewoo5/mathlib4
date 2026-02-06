@@ -389,6 +389,7 @@ end Faulhaber
 
 section vonStaudtClausen
 
+/-- Indicator function that is `1` if `(p - 1) ∣ k` and `0` otherwise. -/
 noncomputable def vonStaudtIndicator (k p : ℕ) : ℚ :=
   if (p - 1 : ℕ) ∣ k then 1 else 0
 
@@ -412,7 +413,7 @@ lemma card_filter_range_ne_zero (p : ℕ) (_hp : p.Prime) :
   simp only [Finset.filter_ne', Finset.card_erase_of_mem (Finset.mem_range.mpr _hp.pos),
     Finset.card_range]
 
-lemma cast_ne_zero_of_mem_filter (p _l : ℕ) (_hp : p.Prime) (v : ℕ)
+lemma cast_ne_zero_of_mem_filter (p : ℕ) (v : ℕ)
     (hv : v ∈ (Finset.range p).filter (· ≠ 0)) : (v : ZMod p) ≠ 0 := by
   simp only [Finset.mem_filter, Finset.mem_range] at hv
   intro h
@@ -422,7 +423,7 @@ lemma cast_ne_zero_of_mem_filter (p _l : ℕ) (_hp : p.Prime) (v : ℕ)
 lemma power_sum_eq_neg_one_mod_of_dvd (p l : ℕ) (hp : p.Prime) (hdvd : (p - 1) ∣ l) :
     (∑ v ∈ Finset.range p with v ≠ 0, (v : ZMod p) ^ l) = -1 := by
   have h1 : ∀ v ∈ (Finset.range p).filter (· ≠ 0), (v : ZMod p) ^ l = 1 := fun v hv =>
-    zmod_pow_eq_one_of_dvd p l hp hdvd (v : ZMod p) (cast_ne_zero_of_mem_filter p l hp v hv)
+    zmod_pow_eq_one_of_dvd p l hp hdvd (v : ZMod p) (cast_ne_zero_of_mem_filter p v hv)
   rw [Finset.sum_congr rfl h1, Finset.sum_const, card_filter_range_ne_zero p hp,
       nsmul_eq_mul, mul_one]
   simp [Nat.cast_sub hp.pos]
@@ -430,7 +431,7 @@ lemma power_sum_eq_neg_one_mod_of_dvd (p l : ℕ) (hp : p.Prime) (hdvd : (p - 1)
 lemma sum_pow_eq_sum_units_pow (p l : ℕ) [Fact p.Prime] :
     (∑ v ∈ Finset.range p with v ≠ 0, (v : ZMod p) ^ l) =
     ∑ u : (ZMod p)ˣ, (u : ZMod p) ^ l := by
-  have hcast := cast_ne_zero_of_mem_filter p l (Fact.out : p.Prime)
+  have hcast := cast_ne_zero_of_mem_filter p
   refine Finset.sum_bij' (fun v hv => ⟨(v : ZMod p), (v : ZMod p)⁻¹,
       mul_inv_cancel₀ (hcast v hv), inv_mul_cancel₀ (hcast v hv)⟩)
     (fun u _ => (u : ZMod p).val) ?_ ?_ ?_ ?_ ?_
@@ -485,7 +486,7 @@ lemma sum_units_eq_sum_range (p l : ℕ) [hp : Fact p.Prime] (g : (ZMod p)ˣ)
   ext i
   simp [← pow_mul, mul_comm]
 
-lemma generator_pow_ne_one (p l : ℕ) [hp : Fact p.Prime] (_hp2 : p ≠ 2)
+lemma generator_pow_ne_one (p l : ℕ) [hp : Fact p.Prime]
     (hndvd : ¬(p - 1) ∣ l) (g : (ZMod p)ˣ)
     (hg : ∀ x : (ZMod p)ˣ, x ∈ Subgroup.zpowers g) :
     (g : ZMod p) ^ l ≠ 1 := by
@@ -494,13 +495,13 @@ lemma generator_pow_ne_one (p l : ℕ) [hp : Fact p.Prime] (_hp2 : p ≠ 2)
   intro h
   exact hndvd (h_order ▸ orderOf_dvd_of_pow_eq_one (Units.ext (by simpa using h)))
 
-lemma sum_units_pow_eq_zero_of_not_dvd (p l : ℕ) [hp : Fact p.Prime] (hp2 : p ≠ 2)
+lemma sum_units_pow_eq_zero_of_not_dvd (p l : ℕ) [hp : Fact p.Prime]
     (hndvd : ¬(p - 1) ∣ l) :
     (∑ u : (ZMod p)ˣ, (u : ZMod p) ^ l) = 0 := by
   haveI : IsCyclic (ZMod p)ˣ := ZMod.isCyclic_units_prime hp.out
   obtain ⟨g, hg⟩ := IsCyclic.exists_generator (α := (ZMod p)ˣ)
   rw [sum_units_eq_sum_range p l g hg]
-  have hx1 := generator_pow_ne_one p l hp2 hndvd g hg
+  have hx1 := generator_pow_ne_one p l hndvd g hg
   have hxp := ZMod.pow_card_sub_one_eq_one (pow_ne_zero l (Units.ne_zero g))
   have := geom_sum_eq hx1 (p - 1)
   aesop
@@ -508,9 +509,8 @@ lemma sum_units_pow_eq_zero_of_not_dvd (p l : ℕ) [hp : Fact p.Prime] (hp2 : p 
 lemma power_sum_eq_zero_mod_of_not_dvd (p l : ℕ) (hp : p.Prime) (hndvd : ¬(p - 1) ∣ l) :
     (∑ v ∈ Finset.range p with v ≠ 0, (v : ZMod p) ^ l) = 0 := by
   haveI : Fact p.Prime := ⟨hp⟩
-  have hp2 : p ≠ 2 := fun h => by subst h; simp at hndvd
   rw [sum_pow_eq_sum_units_pow p l]
-  exact sum_units_pow_eq_zero_of_not_dvd p l hp2 hndvd
+  exact sum_units_pow_eq_zero_of_not_dvd p l hndvd
 
 lemma power_sum_add_indicator_eq_zero (p l : ℕ) (hp : p.Prime) :
     (∑ v ∈ Finset.range p with v ≠ 0, (v : ZMod p) ^ l) +
@@ -550,6 +550,7 @@ lemma is_integer_of_coprime_all_primes (q : ℚ)
   rw [← hq, h1]
   simp
 
+/-- A rational number `x` is `p`-integral if `p` does not divide its denominator. -/
 def pIntegral (p : ℕ) (x : ℚ) : Prop := x.den.Coprime p
 
 lemma sum_den_dvd_prod_den {ι : Type*} (s : Finset ι) (f : ι → ℚ) :
@@ -619,7 +620,7 @@ lemma pow_div_eq_pow_sub_div_ordCompl (p M N : ℕ) (hp : p.Prime) (hM : M ≠ 0
   · rw [Nat.cast_pow, div_eq_iff hpe_ne, ← pow_add, Nat.sub_add_cancel hv]
   · field_simp; simp
 
-lemma den_pow_div_dvd (p M' k : ℕ) (_hM' : M' ≠ 0) :
+lemma den_pow_div_dvd (p M' k : ℕ) :
     ((p : ℚ)^k / M').den ∣ M' := by
   have h1 : ((p : ℚ) ^ k / M') = Rat.divInt (p ^ k : ℤ) (M' : ℤ) := by norm_cast; simp
   rw [h1]
@@ -638,10 +639,10 @@ lemma pIntegral_pow_div (p M N : ℕ) (hp : p.Prime) (hM : M ≠ 0)
     rw [Nat.cast_div_charZero (Nat.ordProj_dvd M p)]
   rw [hcast]
   have hdvd : ((p : ℚ) ^ (N - M.factorization p) / M').den ∣ M' :=
-    den_pow_div_dvd p M' (N - M.factorization p) hM'_ne
+    den_pow_div_dvd p M' (N - M.factorization p)
   exact hM'_cop.coprime_dvd_left hdvd
 
-lemma valuation_bound (p n : ℕ) (hp : p.Prime) (_hn : n ≥ 1) :
+lemma valuation_bound (p n : ℕ) (hp : p.Prime) :
     (n + 1).factorization p ≤ n :=
   Nat.factorization_le_of_le_pow <|
     calc n + 1 = (n + 1).choose 1 := by simp
@@ -654,7 +655,7 @@ lemma pIntegral_i0_term (k p : ℕ) (hk : k > 0) (hp : p.Prime) :
   rw [h]
   apply pIntegral_pow_div p (2 * k + 1) (2 * k) hp
   · omega
-  · exact valuation_bound p (2 * k) hp (by omega)
+  · exact valuation_bound p (2 * k) hp
 
 lemma pIntegral_i1_term_p_eq_two (k : ℕ) (hk : k > 0) :
     pIntegral 2 (bernoulli 1 * (2 * k) * (2 : ℚ) ^ (2 * k - 1) / (2 * k)) := by
@@ -740,7 +741,7 @@ lemma pow_ge_succ_of_ge_three (p d : ℕ) (hp : 3 ≤ p) (hd : d ≥ 2) :
           conv_rhs => rw [show m = m - 1 + 1 from by omega]; exact pow_succ ..
   exact h2 d hd
 
-lemma pIntegral_pow_div_factor (k m p : ℕ) (_hm_pos : m ≥ 1) (hm_lt : m < k) (hp : p.Prime) :
+lemma pIntegral_pow_div_factor (k m p : ℕ) (hm_lt : m < k) (hp : p.Prime) :
     pIntegral p ((p : ℚ) ^ (2*(k-m)) / (2*(↑k - ↑m) + 1)) := by
   set d := k - m with hd
   have hd_pos : d ≥ 1 := by omega
@@ -750,10 +751,9 @@ lemma pIntegral_pow_div_factor (k m p : ℕ) (_hm_pos : m ≥ 1) (hm_lt : m < k)
   rw [hcast2]
   apply pIntegral_pow_div p (2 * d + 1) (2 * d) hp
   · omega
-  · have hn : 2 * d ≥ 1 := by omega
-    exact valuation_bound p (2 * d) hp hn
+  · exact valuation_bound p (2 * d) hp
 
-lemma pIntegral_T1 (k m p : ℕ) (_hk : k > 0) (hm_pos : m ≥ 1) (hm_lt : m < k) (hp : p.Prime)
+lemma pIntegral_T1 (k m p : ℕ) (hm_lt : m < k) (hp : p.Prime)
     (ih : pIntegral p (bernoulli (2 * m) + vonStaudtIndicator (2 * m) p / p)) :
     pIntegral p ((bernoulli (2 * m) + vonStaudtIndicator (2 * m) p / p) * ((2 * k).choose (2 * m)) *
                  (p : ℚ) ^ (2*(k-m)) / (2*(k-m) + 1)) := by
@@ -766,7 +766,7 @@ lemma pIntegral_T1 (k m p : ℕ) (_hk : k > 0) (hm_pos : m ≥ 1) (hm_lt : m < k
   · apply pIntegral_mul
     · exact ih
     · exact pIntegral_of_int p ((2 * k).choose (2 * m))
-  · exact pIntegral_pow_div_factor k m p hm_pos hm_lt hp
+  · exact pIntegral_pow_div_factor k m p hm_lt hp
 
 lemma valuation_three_le_one (p : ℕ) (hp : p.Prime) : (3 : ℕ).factorization p ≤ 1 := by
   rcases hp.eq_two_or_odd with rfl | hp_odd
