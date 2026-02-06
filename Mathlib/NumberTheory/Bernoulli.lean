@@ -521,26 +521,16 @@ lemma generator_pow_ne_one (p l : ℕ) [hp : Fact p.Prime] (_hp2 : p ≠ 2)
   intro h
   exact hndvd (h_order ▸ orderOf_dvd_of_pow_eq_one (Units.ext (by simpa using h)))
 
-lemma geom_sum_of_root_of_unity (p : ℕ) [hp : Fact p.Prime] (x : ZMod p)
-    (hx1 : x ≠ 1) (hxp : x ^ (p - 1) = 1) :
-    ∑ i ∈ Finset.range (p - 1), x ^ i = 0 := by
-  have := geom_sum_eq hx1 (p - 1)
-  aesop
-
-lemma generator_pow_card_sub_one_eq_one (p l : ℕ) [hp : Fact p.Prime] (g : (ZMod p)ˣ)
-    (_hg : ∀ x : (ZMod p)ˣ, x ∈ Subgroup.zpowers g) :
-    ((g : ZMod p) ^ l) ^ (p - 1) = 1 := by
-  exact ZMod.pow_card_sub_one_eq_one (pow_ne_zero _ (Units.ne_zero g))
-
 lemma sum_units_pow_eq_zero_of_not_dvd (p l : ℕ) [hp : Fact p.Prime] (hp2 : p ≠ 2)
     (hndvd : ¬(p - 1) ∣ l) :
     (∑ u : (ZMod p)ˣ, (u : ZMod p) ^ l) = 0 := by
   haveI : IsCyclic (ZMod p)ˣ := ZMod.isCyclic_units_prime hp.out
   obtain ⟨g, hg⟩ := IsCyclic.exists_generator (α := (ZMod p)ˣ)
   rw [sum_units_eq_sum_range p l g hg]
-  apply geom_sum_of_root_of_unity p
-  · exact generator_pow_ne_one p l hp2 hndvd g hg
-  · exact generator_pow_card_sub_one_eq_one p l g hg
+  have hx1 := generator_pow_ne_one p l hp2 hndvd g hg
+  have hxp := ZMod.pow_card_sub_one_eq_one (pow_ne_zero l (Units.ne_zero g))
+  have := geom_sum_eq hx1 (p - 1)
+  aesop
 
 lemma power_sum_eq_zero_mod_of_not_dvd (p l : ℕ) (hp : p.Prime) (hndvd : ¬(p - 1) ∣ l) :
     (∑ v ∈ Finset.range p with v ≠ 0, (v : ZMod p) ^ l) = 0 := by
@@ -850,30 +840,21 @@ lemma den_neg_pow_div_two_dvd_two (k p : ℕ) :
   have h := Rat.den_dvd (p ^ (2 * k - 1)) 2
   exact Int.natCast_dvd_natCast.mp h
 
-lemma pIntegral_neg_pow_div_two (k p : ℕ) (hp : p.Prime) (hp2 : p ≠ 2) :
-    pIntegral p (-(p : ℚ) ^ (2 * k - 1) / 2) := by
-  unfold pIntegral
-  exact Nat.Coprime.of_dvd_left (den_neg_pow_div_two_dvd_two k p)
-    (Odd.coprime_two_left (hp.odd_of_ne_two hp2))
-
 lemma pIntegral_i1_term_p_odd (k p : ℕ) (hk : k > 0) (hp : p.Prime) (hp2 : p ≠ 2) :
     pIntegral p (bernoulli 1 * (2 * k) * (p : ℚ) ^ (2 * k - 1) / (2 * k)) := by
   rw [show bernoulli 1 = (-1 : ℚ) / 2 from by norm_num [bernoulli]]
   have h2 : ((2 * k : ℕ) : ℚ) ≠ 0 := by norm_cast; omega
   field_simp [h2]
   rw [show -(↑↑p ^ (2 * k - 1) / (2 : ℚ)) = -↑↑p ^ (2 * k - 1) / 2 from by ring]
-  exact pIntegral_neg_pow_div_two k p hp hp2
+  unfold pIntegral
+  exact Nat.Coprime.of_dvd_left (den_neg_pow_div_two_dvd_two k p)
+    (Odd.coprime_two_left (hp.odd_of_ne_two hp2))
 
 lemma pIntegral_i1_term (k p : ℕ) (hk : k > 0) (hp : p.Prime) :
     pIntegral p (bernoulli 1 * (2 * k) * (p : ℚ) ^ (2 * k - 1) / (2 * k)) := by
   obtain rfl | hp2 := eq_or_ne p 2
   · exact pIntegral_i1_term_p_eq_two k hk
   · exact pIntegral_i1_term_p_odd k p hk hp hp2
-
-lemma pIntegral_odd_term (i _p : ℕ) (hi_odd : Odd i) (hi_ge3 : i ≥ 3) :
-    bernoulli i = 0 := by
-  have h1 : 1 < i := by grind
-  aesop
 
 lemma pIntegral_mul (p : ℕ) (x y : ℚ) (hx : pIntegral p x) (hy : pIntegral p y) :
     pIntegral p (x * y) :=
@@ -1039,16 +1020,6 @@ lemma even_term_eq_T1_sub_T2 (k m p : ℕ) (hm_lt : m < k) :
 lemma pIntegral_sub (p : ℕ) (x y : ℚ) (hx : pIntegral p x) (hy : pIntegral p y) :
     pIntegral p (x - y) :=
   Nat.Coprime.coprime_dvd_left (Rat.sub_den_dvd x y) (Nat.Coprime.mul_left hx hy)
-
-lemma pIntegral_even_term (k m p : ℕ) (hk : k > 0) (hm_pos : m ≥ 1)
-    (hm_lt : m < k) (hp : p.Prime)
-    (ih : pIntegral p
-      (bernoulli (2 * m) + vonStaudtIndicator (2 * m) p / p)) :
-    pIntegral p (bernoulli (2 * m) * ((2 * k).choose (2 * m)) *
-      (p : ℚ) ^ (2*(k-m)) / (2*(k-m) + 1)) := by
-  rw [even_term_eq_T1_sub_T2 k m p hm_lt]
-  exact pIntegral_sub p _ _ (pIntegral_T1 k m p hk hm_pos hm_lt hp ih)
-    (pIntegral_T2 k m p hk hm_pos hm_lt hp)
 
 theorem i1_term_forms_eq (k p : ℕ) (hk : k > 0) :
     bernoulli 1 * (2 * ↑k) * (p : ℚ) ^ (2 * k - 1) / (2 * ↑k) =
@@ -1229,18 +1200,11 @@ lemma pIntegral_remainder (k p : ℕ) (hk : k > 0) (hp : p.Prime)
       have hj_eq : j = 2 * m := by omega
       simp only [hj_eq]
       exact pIntegral_even_term_in_sum k m p hk hm_pos hm_lt hp (ih m (by omega) hm_lt)
-    · have hj_ge3 : j ≥ 3 := by rcases hodd with ⟨r, hr⟩; omega
-      simp only [pIntegral_odd_term j p hodd hj_ge3, zero_mul, zero_div]
+    · simp only [bernoulli_eq_zero_of_odd hodd (by rcases hodd with ⟨r, hr⟩; omega),
+        zero_mul, zero_div]
       unfold pIntegral
       simp only [Rat.den_zero]
       exact Nat.coprime_one_left_iff p |>.mpr trivial
-
-lemma power_sum_eq_faulhaber (k p : ℕ) :
-    (∑ v ∈ Finset.range p, (v : ℚ) ^ (2 * k)) =
-    ∑ i ∈ Finset.range (2 * k + 1), bernoulli i *
-      ((2 * k + 1).choose i) *
-      (p : ℚ) ^ (2 * k + 1 - i) / (2 * k + 1) := by
-  grind only [sum_range_pow]
 
 lemma faulhaber_top_term (k p : ℕ) :
     bernoulli (2 * k) * ((2 * k + 1).choose (2 * k)) * (p : ℚ) ^ (2 * k + 1 - 2 * k) / (2 * k + 1) =
@@ -1365,8 +1329,9 @@ lemma bernoulli_plus_indicator_rearrangement (k p : ℕ) (hk : k > 0) (hp : p.Pr
   have hFaul : (∑ v ∈ Finset.range p with v ≠ 0, (v : ℚ) ^ (2 * k)) =
                (∑ i ∈ Finset.range (2 * k), bernoulli i * ((2 * k + 1).choose i) *
                 (p : ℚ) ^ (2 * k + 1 - i) / (2 * k + 1)) + p * bernoulli (2 * k) := by
-    rw [← rat_power_sum_eq_filter_ne_zero k p hk, power_sum_eq_faulhaber,
-        faulhaber_split_top_term, faulhaber_top_term]
+    rw [← rat_power_sum_eq_filter_ne_zero k p hk]
+    simp only [sum_range_pow]; push_cast
+    rw [faulhaber_split_top_term, faulhaber_top_term]
   have hAlg := algebraic_rearrangement k p T hp hT' hFaul
   rw [hAlg, remainder_div_p k p hp]
 
@@ -1384,10 +1349,6 @@ lemma bernoulli_plus_indicator_coprime_p_pos (k p : ℕ) (hk : k > 0) (hp : p.Pr
       exact ih m hm_lt hm_pos
     exact pIntegral_sub p T _ hT_int hR
 
-lemma pIntegral_add (p : ℕ) (x y : ℚ) (hx : pIntegral p x) (hy : pIntegral p y) :
-    pIntegral p (x + y) :=
-  Nat.Coprime.coprime_dvd_left (Rat.add_den_dvd x y) (Nat.Coprime.mul_left hx hy)
-
 lemma sum_other_primes_coprime_p_pos (k p : ℕ) (_hk : k > 0) (hp : p.Prime) :
     (∑ q ∈ Finset.range (2 * k + 2) with q.Prime ∧ (q - 1) ∣ 2 * k ∧ q ≠ p,
       (1 : ℚ) / q).den.Coprime p := by
@@ -1395,25 +1356,14 @@ lemma sum_other_primes_coprime_p_pos (k p : ℕ) (_hk : k > 0) (hp : p.Prime) :
   · exact sum_den_dvd_prod_den _ _
   · exact prod_den_coprime_p k p hp
 
-lemma coprime_add_of_coprime_den (q1 q2 : ℚ) (p : ℕ) (h1 : q1.den.Coprime p)
-    (h2 : q2.den.Coprime p) :
-    (q1 + q2).den.Coprime p :=
-  Nat.Coprime.of_dvd_left (Rat.add_den_dvd q1 q2) (h1.mul_left h2)
-
 lemma von_staudt_coprime_all_primes_pos (k p : ℕ) (hk : k > 0) (hp : p.Prime) :
     (bernoulli (2 * k) + ∑ q ∈ Finset.range (2 * k + 2) with
       q.Prime ∧ (q - 1) ∣ 2 * k, (1 : ℚ) / q).den.Coprime p := by
   rw [sum_primes_eq_indicator_add_rest k p hk hp]
   rw [← add_assoc]
-  exact coprime_add_of_coprime_den _ _ p
-    (bernoulli_plus_indicator_coprime_p_pos k p hk hp)
-    (sum_other_primes_coprime_p_pos k p hk hp)
-
-lemma von_staudt_clausen_pos (k : ℕ) (hk : k > 0) :
-    bernoulli (2 * k) + ∑ p ∈ Finset.range (2 * k + 2) with p.Prime ∧ (p - 1) ∣ 2 * k,
-      (1 : ℚ) / p ∈ Set.range Int.cast := by
-  apply is_integer_of_coprime_all_primes
-  exact fun p hp => von_staudt_coprime_all_primes_pos k p hk hp
+  exact Nat.Coprime.of_dvd_left (Rat.add_den_dvd _ _)
+    ((bernoulli_plus_indicator_coprime_p_pos k p hk hp).mul_left
+      (sum_other_primes_coprime_p_pos k p hk hp))
 
 theorem von_staudt_clausen (k : ℕ) :
     bernoulli (2 * k) +
@@ -1421,6 +1371,7 @@ theorem von_staudt_clausen (k : ℕ) :
       (1 : ℚ) / p ∈ Set.range Int.cast := by
   rcases Nat.eq_zero_or_pos k with rfl | hk
   · exact von_staudt_clausen_zero
-  · exact von_staudt_clausen_pos k hk
+  · exact is_integer_of_coprime_all_primes _
+      (fun p hp => von_staudt_coprime_all_primes_pos k p hk hp)
 
 end vonStaudtClausen
