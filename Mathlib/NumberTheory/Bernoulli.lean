@@ -252,7 +252,6 @@ theorem bernoulli_spec' (n : ℕ) :
   rw [if_neg (succ_ne_zero _)]
   -- algebra facts
   have h₁ : (1, n) ∈ antidiagonal n.succ := by simp [mem_antidiagonal, add_comm]
-  have h₂ : (n : ℚ) + 1 ≠ 0 := by norm_cast
   have h₃ : (1 + n).choose n = n + 1 := by simp [add_comm]
   -- key equation: the corresponding fact for `bernoulli'`
   have H := bernoulli'_spec' n.succ
@@ -422,9 +421,7 @@ lemma von_staudt_clausen_zero :
       (1 : ℚ) / p ∈ Set.range Int.cast := by
   have h1 : bernoulli (2 * 0) = 1 := by norm_num [bernoulli_zero]
   have h2 : ∑ p ∈ Finset.range (2 * 0 + 2) with
-      p.Prime ∧ (p - 1) ∣ 2 * 0, (1 : ℚ) / p = 0 := by
-    norm_num
-    decide
+      p.Prime ∧ (p - 1) ∣ 2 * 0, (1 : ℚ) / p = 0 := by norm_num; decide
   rw [h1, h2]
   exact ⟨1, by norm_num⟩
 
@@ -862,10 +859,9 @@ lemma pIntegral_mul (p : ℕ) (x y : ℚ) (hx : pIntegral p x) (hy : pIntegral p
 
 lemma pIntegral_mul_int (p : ℕ) (x : ℚ) (z : ℤ) (hx : pIntegral p x) :
     pIntegral p (z * x) := by
-  have h_z_den : (z : ℚ).den = 1 := by aesop
-  have h_den_dvd : (z * x : ℚ).den ∣ (z : ℚ).den * x.den := Rat.mul_den_dvd z x
+  have _ := Rat.mul_den_dvd z x
   have h1 : (z * x : ℚ).den ∣ x.den := by aesop
-  have h2 : Nat.Coprime (z * x : ℚ).den p := Nat.Coprime.coprime_dvd_left h1 hx
+  have h2 := Nat.Coprime.coprime_dvd_left h1 hx
   aesop
 
 lemma pIntegral_mul_nat (p : ℕ) (x : ℚ) (n : ℕ) (hx : pIntegral p x) :
@@ -1074,8 +1070,7 @@ lemma choose_div_simplify (k m : ℕ) (x : ℚ) (hm_lt : m < k) :
 
 lemma pIntegral_case_one (k m p : ℕ) (_hk : k > 0) (_hm_pos : m ≥ 1) (hm_lt : m < k)
     (hp : p.Prime) (hd : 2 * k - 2 * m ≥ 2) :
-    pIntegral p (((2 * k).choose (2 * m) : ℚ) *
-      (p : ℚ) ^ (2 * k - 2 * m - 1) /
+    pIntegral p (((2 * k).choose (2 * m) : ℚ) * (p : ℚ) ^ (2 * k - 2 * m - 1) /
       (2 * k - 2 * m + 1)) := by
   set d := 2 * k - 2 * m with hd_def
   have ⟨hd_ne_zero, hd_plus_one_ne_zero, h_exp, hkm⟩ :
@@ -1093,10 +1088,8 @@ lemma pIntegral_case_one (k m p : ℕ) (_hk : k > 0) (_hm_pos : m ≥ 1) (hm_lt 
 
 lemma pIntegral_second_term (k m p : ℕ) (hk : k > 0) (hm_pos : m ≥ 1) (hm_lt : m < k)
     (hp : p.Prime) :
-    pIntegral p (vonStaudtIndicator (2 * m) p *
-      ((2 * k + 1).choose (2 * m)) *
-      (p : ℚ) ^ (2 * k - 2 * m - 1) /
-      (2 * k + 1)) := by
+    pIntegral p (vonStaudtIndicator (2 * m) p * ((2 * k + 1).choose (2 * m)) *
+      (p : ℚ) ^ (2 * k - 2 * m - 1) / (2 * k + 1)) := by
   unfold vonStaudtIndicator
   split_ifs with h
   · simp only [one_mul]
@@ -1163,9 +1156,7 @@ lemma pIntegral_first_term (k m p : ℕ) (hk : k > 0) (hm_pos : m ≥ 1) (hm_lt 
   exact pIntegral_mul p _ _ ih (pIntegral_coeff_term k m p hk hm_pos hm_lt hp)
 
 lemma pIntegral_even_term_in_sum (k m p : ℕ) (hk : k > 0) (hm_pos : m ≥ 1) (hm_lt : m < k)
-    (hp : p.Prime)
-    (ih : pIntegral p
-      (bernoulli (2 * m) + vonStaudtIndicator (2 * m) p / p)) :
+    (hp : p.Prime) (ih : pIntegral p (bernoulli (2 * m) + vonStaudtIndicator (2 * m) p / p)) :
     pIntegral p (bernoulli (2 * m) * ((2 * k + 1).choose (2 * m)) *
       (p : ℚ) ^ (2 * k - 2 * m) / (2 * k + 1)) := by
   rw [even_term_decomposition_identity k m p hk hm_pos hm_lt]
@@ -1173,8 +1164,7 @@ lemma pIntegral_even_term_in_sum (k m p : ℕ) (hk : k > 0) (hm_pos : m ≥ 1) (
     (pIntegral_second_term k m p hk hm_pos hm_lt hp)
 
 lemma pIntegral_remainder (k p : ℕ) (hk : k > 0) (hp : p.Prime)
-    (ih : ∀ m, 0 < m → m < k →
-      pIntegral p (bernoulli (2 * m) + vonStaudtIndicator (2 * m) p / p)) :
+    (ih : ∀ m, 0 < m → m < k → pIntegral p (bernoulli (2 * m) + vonStaudtIndicator (2 * m) p / p)) :
     pIntegral p (∑ i ∈ Finset.range (2 * k),
       bernoulli i * ((2 * k + 1).choose i) * (p : ℚ) ^ (2 * k - i) / (2 * k + 1)) := by
   apply pIntegral_sum
@@ -1298,7 +1288,6 @@ lemma divisibility_to_rat_eq (k p : ℕ) (T : ℤ) (_hp : p.Prime)
   have h2 : ((if (p - 1 : ℕ) ∣ (2 * k) then (1 : ℤ) else (0 : ℤ)) : ℚ) =
       vonStaudtIndicator (2 * k) p := by
     split_ifs at * <;> simp_all [vonStaudtIndicator]
-  have h3 : ((p : ℤ) * T : ℚ) = p * T := by norm_cast
   have h4 : ((∑ v ∈ Finset.range p with v ≠ 0, (v : ℤ) ^ (2 * k)) : ℚ) +
       ((if (p - 1 : ℕ) ∣ (2 * k) then (1 : ℤ) else (0 : ℤ)) : ℚ) = (p : ℚ) * T := by
     norm_cast at hT ⊢
