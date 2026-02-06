@@ -440,9 +440,6 @@ lemma card_filter_range_ne_zero (p : ℕ) (_hp : p.Prime) :
   simp only [Finset.filter_ne', Finset.card_erase_of_mem (Finset.mem_range.mpr _hp.pos),
     Finset.card_range]
 
-lemma zmod_nat_sub_one_eq_neg_one (p : ℕ) (hp : 0 < p) : ((p - 1 : ℕ) : ZMod p) = -1 := by
-  simp [Nat.cast_sub hp]
-
 lemma cast_ne_zero_of_mem_filter (p _l : ℕ) (_hp : p.Prime) (v : ℕ)
     (hv : v ∈ (Finset.range p).filter (· ≠ 0)) : (v : ZMod p) ≠ 0 := by
   simp only [Finset.mem_filter, Finset.mem_range] at hv
@@ -456,7 +453,7 @@ lemma power_sum_eq_neg_one_mod_of_dvd (p l : ℕ) (hp : p.Prime) (hdvd : (p - 1)
     zmod_pow_eq_one_of_dvd p l hp hdvd (v : ZMod p) (cast_ne_zero_of_mem_filter p l hp v hv)
   rw [Finset.sum_congr rfl h1, Finset.sum_const, card_filter_range_ne_zero p hp,
       nsmul_eq_mul, mul_one]
-  exact zmod_nat_sub_one_eq_neg_one p hp.pos
+  simp [Nat.cast_sub hp.pos]
 
 lemma sum_pow_eq_sum_units_pow (p l : ℕ) [Fact p.Prime] :
     (∑ v ∈ Finset.range p with v ≠ 0, (v : ZMod p) ^ l) =
@@ -485,9 +482,6 @@ lemma sum_pow_eq_sum_units_pow (p l : ℕ) [Fact p.Prime] :
   · intro v _
     simp
 
-lemma prime_ne_two_of_not_dvd_sub_one (p l : ℕ) (_hp : p.Prime) (hndvd : ¬(p - 1) ∣ l) :
-    p ≠ 2 := fun h => by subst h; simp at hndvd
-
 lemma generator_orderOf_eq (p : ℕ) [hp : Fact p.Prime] (g : (ZMod p)ˣ)
     (_hg : ∀ x : (ZMod p)ˣ, x ∈ Subgroup.zpowers g) :
     orderOf g = p - 1 := by
@@ -505,10 +499,6 @@ lemma pow_injective_on_range (p : ℕ) [hp : Fact p.Prime] (g : (ZMod p)ˣ)
   rw [IsOfFinOrder.pow_eq_pow_iff_modEq hfin, hord] at heq
   exact Nat.ModEq.eq_of_lt_of_lt heq hi hj
 
-lemma units_pow_coe_eq (p l : ℕ) (g : (ZMod p)ˣ) (i : ℕ) :
-    ((g ^ i : (ZMod p)ˣ) : ZMod p) ^ l = ((g : ZMod p) ^ l) ^ i := by
-  simp [← pow_mul, mul_comm]
-
 lemma sum_units_eq_sum_range (p l : ℕ) [hp : Fact p.Prime] (g : (ZMod p)ˣ)
     (hg : ∀ x : (ZMod p)ˣ, x ∈ Subgroup.zpowers g) :
     (∑ u : (ZMod p)ˣ, (u : ZMod p) ^ l) =
@@ -521,7 +511,7 @@ lemma sum_units_eq_sum_range (p l : ℕ) [hp : Fact p.Prime] (g : (ZMod p)ˣ)
   rw [Finset.sum_image (pow_injective_on_range p g hg)]
   congr 1
   ext i
-  exact units_pow_coe_eq p l g i
+  simp [← pow_mul, mul_comm]
 
 lemma generator_pow_ne_one (p l : ℕ) [hp : Fact p.Prime] (_hp2 : p ≠ 2)
     (hndvd : ¬(p - 1) ∣ l) (g : (ZMod p)ˣ)
@@ -556,7 +546,7 @@ lemma sum_units_pow_eq_zero_of_not_dvd (p l : ℕ) [hp : Fact p.Prime] (hp2 : p 
 lemma power_sum_eq_zero_mod_of_not_dvd (p l : ℕ) (hp : p.Prime) (hndvd : ¬(p - 1) ∣ l) :
     (∑ v ∈ Finset.range p with v ≠ 0, (v : ZMod p) ^ l) = 0 := by
   haveI : Fact p.Prime := ⟨hp⟩
-  have hp2 : p ≠ 2 := prime_ne_two_of_not_dvd_sub_one p l hp hndvd
+  have hp2 : p ≠ 2 := fun h => by subst h; simp at hndvd
   rw [sum_pow_eq_sum_units_pow p l]
   exact sum_units_pow_eq_zero_of_not_dvd p l hp2 hndvd
 
@@ -790,25 +780,13 @@ lemma sum_primes_eq_indicator_add_rest (k p : ℕ) (hk : k > 0) (hp : p.Prime) :
 
 lemma pIntegral_of_int (p : ℕ) (z : ℤ) : pIntegral p z := by simp_all [pIntegral]
 
-lemma ordCompl_coprime_of_prime (p M : ℕ) (hp : p.Prime) (hM : M ≠ 0) :
-    (M / p ^ M.factorization p).Coprime p :=
-  (Nat.coprime_ordCompl hp hM).symm
-
-lemma pIntegral_of_den_dvd_coprime (p : ℕ) (x : ℚ) (M : ℕ)
-    (hdvd : x.den ∣ M) (hcop : M.Coprime p) : pIntegral p x :=
-  hcop.coprime_dvd_left hdvd
-
-lemma ordCompl_ne_zero (p M : ℕ) (_hp : p.Prime) (hM : M ≠ 0) :
-    M / p ^ M.factorization p ≠ 0 :=
-  (Nat.ordCompl_pos p hM).ne'
-
 lemma pow_div_eq_pow_sub_div_ordCompl (p M N : ℕ) (hp : p.Prime) (hM : M ≠ 0)
     (hv : M.factorization p ≤ N) :
     (p : ℚ)^N / M = (p : ℚ) ^ (N - M.factorization p) / (M / p ^ M.factorization p) := by
   set e := M.factorization p with he
   set M' := M / p ^ e with hM'
   have hdecomp : p ^ e * M' = M := Nat.ordProj_mul_ordCompl_eq_self M p
-  have hM'_ne : M' ≠ 0 := ordCompl_ne_zero p M hp hM
+  have hM'_ne : M' ≠ 0 := (Nat.ordCompl_pos p hM).ne'
   have hM_cast : (M : ℚ) = (p ^ e : ℕ) * (M' : ℕ) := by rw [← hdecomp]; simp
   rw [hM_cast]
   have hp_ne : (p : ℚ) ≠ 0 := Nat.cast_ne_zero.mpr hp.ne_zero
@@ -828,8 +806,8 @@ lemma den_pow_div_dvd (p M' k : ℕ) (_hM' : M' ≠ 0) :
 lemma pIntegral_pow_div (p M N : ℕ) (hp : p.Prime) (hM : M ≠ 0)
     (hv : M.factorization p ≤ N) : pIntegral p ((p : ℚ)^N / M) := by
   set M' := M / p ^ M.factorization p with hM'_def
-  have hM'_ne : M' ≠ 0 := ordCompl_ne_zero p M hp hM
-  have hM'_cop : M'.Coprime p := ordCompl_coprime_of_prime p M hp hM
+  have hM'_ne : M' ≠ 0 := (Nat.ordCompl_pos p hM).ne'
+  have hM'_cop : M'.Coprime p := (Nat.coprime_ordCompl hp hM).symm
   rw [pow_div_eq_pow_sub_div_ordCompl p M N hp hM hv]
   have hcast : (M : ℚ) / (p : ℚ) ^ M.factorization p = (M' : ℚ) := by
     rw [hM'_def]
@@ -838,7 +816,7 @@ lemma pIntegral_pow_div (p M N : ℕ) (hp : p.Prime) (hM : M ≠ 0)
   rw [hcast]
   have hdvd : ((p : ℚ) ^ (N - M.factorization p) / M').den ∣ M' :=
     den_pow_div_dvd p M' (N - M.factorization p) hM'_ne
-  exact pIntegral_of_den_dvd_coprime p _ M' hdvd hM'_cop
+  exact hM'_cop.coprime_dvd_left hdvd
 
 lemma valuation_bound (p n : ℕ) (hp : p.Prime) (_hn : n ≥ 1) :
     (n + 1).factorization p ≤ n :=
@@ -881,17 +859,6 @@ lemma pIntegral_i1_term_p_eq_two (k : ℕ) (hk : k > 0) :
   rw [h4]
   norm_num [pIntegral]
 
-lemma i1_term_simplify (k p : ℕ) (hk : k > 0) :
-    bernoulli 1 * (2 * k) * (p : ℚ) ^ (2 * k - 1) / (2 * k) = -(p : ℚ) ^ (2 * k - 1) / 2 := by
-  have h1 : bernoulli 1 = (-1 : ℚ) / 2 := by norm_num [bernoulli]
-  rw [h1]
-  have h2 : ((2 * k : ℕ) : ℚ) ≠ 0 := by norm_cast; omega
-  field_simp [h2]
-
-lemma two_coprime_odd_prime (p : ℕ) (hp : p.Prime) (hp2 : p ≠ 2) :
-    Nat.Coprime 2 p :=
-  Odd.coprime_two_left (Nat.Prime.odd_of_ne_two hp hp2)
-
 lemma den_neg_pow_div_two_dvd_two (k p : ℕ) :
     (-(p : ℚ) ^ (2 * k - 1) / 2).den ∣ 2 := by
   rw [neg_div, Rat.den_neg_eq_den, ← Nat.cast_pow]
@@ -902,11 +869,15 @@ lemma den_neg_pow_div_two_dvd_two (k p : ℕ) :
 lemma pIntegral_neg_pow_div_two (k p : ℕ) (hp : p.Prime) (hp2 : p ≠ 2) :
     pIntegral p (-(p : ℚ) ^ (2 * k - 1) / 2) := by
   unfold pIntegral
-  exact Nat.Coprime.of_dvd_left (den_neg_pow_div_two_dvd_two k p) (two_coprime_odd_prime p hp hp2)
+  exact Nat.Coprime.of_dvd_left (den_neg_pow_div_two_dvd_two k p)
+    (Odd.coprime_two_left (hp.odd_of_ne_two hp2))
 
 lemma pIntegral_i1_term_p_odd (k p : ℕ) (hk : k > 0) (hp : p.Prime) (hp2 : p ≠ 2) :
     pIntegral p (bernoulli 1 * (2 * k) * (p : ℚ) ^ (2 * k - 1) / (2 * k)) := by
-  rw [i1_term_simplify k p hk]
+  rw [show bernoulli 1 = (-1 : ℚ) / 2 from by norm_num [bernoulli]]
+  have h2 : ((2 * k : ℕ) : ℚ) ≠ 0 := by norm_cast; omega
+  field_simp [h2]
+  rw [show -(↑↑p ^ (2 * k - 1) / (2 : ℚ)) = -↑↑p ^ (2 * k - 1) / 2 from by ring]
   exact pIntegral_neg_pow_div_two k p hp hp2
 
 lemma pIntegral_i1_term (k p : ℕ) (hk : k > 0) (hp : p.Prime) :
@@ -1142,34 +1113,21 @@ lemma valuation_bound_d_plus_1 (p d : ℕ) (hp : p.Prime) (hd : d ≥ 2) :
       omega
     · exact hd
 
-lemma nat_sub_add_eq (k m : ℕ) (hm_lt : m < k) :
-    2 * k + 1 - 2 * m = 2 * k - 2 * m + 1 := by grind
-
-lemma denom_cast_eq (k m : ℕ) (hm_lt : m < k) :
-    ((2 * k - 2 * m + 1 : ℕ) : ℚ) = 2 * ↑k - 2 * ↑m + 1 := by
-  have h : 2 * m ≤ 2 * k := by omega
-  simp only [Nat.cast_sub h, Nat.cast_add, Nat.cast_mul, Nat.cast_ofNat, Nat.cast_one]
-
-lemma choose_mul_succ_rat (k m : ℕ) :
-    ((2 * k).choose (2 * m) : ℚ) * ((2 * k + 1 : ℕ) : ℚ) =
-    ((2 * k + 1).choose (2 * m)) * ((2 * k + 1 - 2 * m) : ℕ) := by
-  have h := Nat.choose_mul_succ_eq (2 * k) (2 * m)
-  exact_mod_cast h
-
 lemma choose_div_core (k m : ℕ) (hm_lt : m < k) :
     ((2 * k + 1).choose (2 * m) : ℚ) / (2 * k + 1) =
     ((2 * k).choose (2 * m) : ℚ) / (2 * k - 2 * m + 1) := by
-  have h_denom : (2 * (k : ℚ) - 2 * m + 1) = ((2 * k - 2 * m + 1 : ℕ) : ℚ) :=
-    (denom_cast_eq k m hm_lt).symm
+  have h_denom : (2 * (k : ℚ) - 2 * m + 1) = ((2 * k - 2 * m + 1 : ℕ) : ℚ) := by
+    have h : 2 * m ≤ 2 * k := by omega
+    simp only [Nat.cast_sub h, Nat.cast_add, Nat.cast_mul, Nat.cast_ofNat, Nat.cast_one]
   conv_rhs => rw [h_denom]
-  have h_nat := (nat_sub_add_eq k m hm_lt).symm
-  simp only [h_nat]
+  have h_nat : 2 * k + 1 - 2 * m = 2 * k - 2 * m + 1 := by grind
+  simp only [h_nat.symm]
   have h_lhs_denom : (2 * (k : ℚ) + 1) = ((2 * k + 1 : ℕ) : ℚ) := by push_cast; ring
   conv_lhs => rw [h_lhs_denom]
   have hk_pos : ((2 * k + 1 : ℕ) : ℚ) ≠ 0 := by positivity
   have hd_pos : ((2 * k + 1 - 2 * m : ℕ) : ℚ) ≠ 0 := by simp only [Nat.cast_ne_zero]; omega
   rw [div_eq_div_iff hk_pos hd_pos]
-  exact (choose_mul_succ_rat k m).symm
+  exact_mod_cast (Nat.choose_mul_succ_eq (2 * k) (2 * m)).symm
 
 lemma choose_div_simplify (k m : ℕ) (x : ℚ) (hm_lt : m < k) :
     ((2 * k + 1).choose (2 * m) : ℚ) * x / (2 * k + 1) =
@@ -1393,22 +1351,12 @@ lemma faulhaber_top_term (k p : ℕ) :
   norm_cast
   ring_nf
 
-lemma int_sum_cast_eq_zmod_sum (p l : ℕ) :
-    (↑(∑ v ∈ Finset.range p with v ≠ 0, (v : ℤ) ^ l) : ZMod p) =
-    ∑ v ∈ Finset.range p with v ≠ 0, (v : ZMod p) ^ l := by simp
-
-lemma int_indicator_cast_eq_zmod (p l : ℕ) :
-    (↑(if (p - 1 : ℕ) ∣ l then (1 : ℤ) else 0) : ZMod p) =
-    if (p - 1 : ℕ) ∣ l then (1 : ZMod p) else 0 := by
-  split_ifs with h <;> simp [Int.cast_one, Int.cast_zero]
-
 lemma power_sum_indicator_divisible_by_p (k p : ℕ) (_hk : k > 0) (hp : p.Prime) :
     ∃ T : ℤ, (∑ v ∈ Finset.range p with v ≠ 0, (v : ℤ) ^ (2 * k)) +
     (if (p - 1 : ℕ) ∣ (2 * k) then 1 else 0) = p * T := by
   have h_cast : (↑((∑ v ∈ Finset.range p with v ≠ 0, (v : ℤ) ^ (2 * k)) +
       (if (p - 1 : ℕ) ∣ (2 * k) then 1 else 0)) : ZMod p) = 0 := by
-    simp only [Int.cast_add]
-    rw [int_sum_cast_eq_zmod_sum, int_indicator_cast_eq_zmod]
+    push_cast
     exact power_sum_add_indicator_eq_zero p (2 * k) hp
   rw [ZMod.intCast_zmod_eq_zero_iff_dvd] at h_cast
   exact h_cast
