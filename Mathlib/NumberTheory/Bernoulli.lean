@@ -573,15 +573,11 @@ lemma pIntegral_mul (p : ℕ) (x y : ℚ) (hx : pIntegral p x) (hy : pIntegral p
     pIntegral p (x * y) :=
   Nat.Coprime.of_dvd_left (Rat.mul_den_dvd x y) (Nat.Coprime.mul_left hx hy)
 
-lemma pIntegral_mul_int (p : ℕ) (x : ℚ) (z : ℤ) (hx : pIntegral p x) :
-    pIntegral p (z * x) := by
+lemma pIntegral_int_mul (p : ℕ) (x : ℚ) (z : ℤ) (hx : pIntegral p x) : pIntegral p (z * x) := by
   have _ := Rat.mul_den_dvd z x
   have h1 : (z * x : ℚ).den ∣ x.den := by aesop
   have h2 := Nat.Coprime.coprime_dvd_left h1 hx
   aesop
-
-lemma pIntegral_mul_nat (p : ℕ) (x : ℚ) (n : ℕ) (hx : pIntegral p x) : pIntegral p (n * x) :=
-  pIntegral_mul_int p x n hx
 
 lemma pIntegral_sub (p : ℕ) (x y : ℚ) (hx : pIntegral p x) (hy : pIntegral p y) :
     pIntegral p (x - y) :=
@@ -816,7 +812,7 @@ lemma pIntegral_T2 (k m p : ℕ) (hm_lt : m < k) (hp : p.Prime) :
         (↑((2 * k).choose (2 * m)) : ℚ) *
           (↑p ^ (2 * d - 1) / ↑(2 * d + 1)) := by ring
     rw [h_rw]
-    exact pIntegral_mul_nat p ((p : ℚ) ^ (2 * d - 1) / ↑(2 * d + 1))
+    exact pIntegral_int_mul p ((p : ℚ) ^ (2 * d - 1) / ↑(2 * d + 1))
       ((2 * k).choose (2 * m)) h_pow_pIntegral
   · simp only [zero_mul, zero_div]
     exact pIntegral_of_int p 0
@@ -913,7 +909,7 @@ lemma pIntegral_case_one (k m p : ℕ) (hm_lt : m < k) (hp : p.Prime) (hd : 2 * 
   have h_eq : ((2 * k).choose (2 * m) : ℚ) * (p : ℚ) ^ (d - 1) / ((d + 1 : ℕ) : ℚ) =
       ((2 * k).choose (2 * m) : ℕ) * ((p : ℚ) ^ (d - 1) / ((d + 1 : ℕ) : ℚ)) := by ring
   rw [h_eq]
-  exact pIntegral_mul_nat p _ _ h_pow_integral
+  exact pIntegral_int_mul p _ _ h_pow_integral
 
 lemma pIntegral_second_term (k m p : ℕ) (hm_lt : m < k) (hp : p.Prime) :
     pIntegral p (vonStaudtIndicator (2 * m) p * ((2 * k + 1).choose (2 * m)) *
