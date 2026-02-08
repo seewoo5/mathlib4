@@ -9,6 +9,7 @@ public import Mathlib.Algebra.BigOperators.Field
 public import Mathlib.Algebra.Field.GeomSum
 public import Mathlib.Data.Nat.Choose.Bounds
 public import Mathlib.RingTheory.PowerSeries.Exp
+public import Mathlib.FieldTheory.Finite.Basic
 public import Mathlib.RingTheory.ZMod.UnitsCyclic
 
 /-!
@@ -393,74 +394,28 @@ section vonStaudtClausen
 noncomputable def vonStaudtIndicator (k p : ℕ) : ℚ :=
   if (p - 1 : ℕ) ∣ k then 1 else 0
 
-lemma cast_ne_zero_of_mem_filter (p : ℕ) (v : ℕ)
-    (hv : v ∈ (Finset.range p).filter (· ≠ 0)) : (v : ZMod p) ≠ 0 := by
-  simp only [Finset.mem_filter, Finset.mem_range] at hv
-  intro h
-  have h1 : (p : ℕ) ∣ v := by simpa [ZMod.natCast_eq_zero_iff] using h
-  exact absurd (Nat.le_of_dvd (by omega) h1) (by omega)
-
-lemma power_sum_eq_neg_one_mod_of_dvd (p l : ℕ) (hp : p.Prime) (hdvd : (p - 1) ∣ l) :
-    (∑ v ∈ Finset.range p with v ≠ 0, (v : ZMod p) ^ l) = -1 := by
-  haveI : Fact p.Prime := ⟨hp⟩
-  have h1 : ∀ v ∈ (Finset.range p).filter (· ≠ 0), (v : ZMod p) ^ l = 1 := by
-    intro v hv; obtain ⟨k, hk⟩ := hdvd
-    simp only [hk, pow_mul, ZMod.pow_card_sub_one_eq_one (cast_ne_zero_of_mem_filter p v hv),
-      one_pow]
-  rw [Finset.sum_congr rfl h1, Finset.sum_const, Finset.filter_ne',
-      Finset.card_erase_of_mem (Finset.mem_range.mpr hp.pos), Finset.card_range,
-      nsmul_eq_mul, mul_one]
-  simp [Nat.cast_sub hp.pos]
-
-lemma generator_orderOf_eq (p : ℕ) [hp : Fact p.Prime] (g : (ZMod p)ˣ)
-    (_hg : ∀ x : (ZMod p)ˣ, x ∈ Subgroup.zpowers g) : orderOf g = p - 1 := by
-  have h1 : Fintype.card (Subgroup.zpowers g) = orderOf g := Fintype.card_zpowers
-  have h3 : Fintype.card (ZMod p)ˣ = p - 1 := ZMod.card_units p
-  aesop
-
-lemma sum_units_pow_eq_zero_of_not_dvd (p l : ℕ) [hp : Fact p.Prime] (hndvd : ¬(p - 1) ∣ l) :
-    (∑ u : (ZMod p)ˣ, (u : ZMod p) ^ l) = 0 := by
-  haveI : IsCyclic (ZMod p)ˣ := ZMod.isCyclic_units_prime hp.out
-  obtain ⟨g, hg⟩ := IsCyclic.exists_generator (α := (ZMod p)ˣ)
-  -- Rewrite sum over units as geometric sum using generator
-  have hord : orderOf g = p - 1 := generator_orderOf_eq p g hg
-  have himg := IsCyclic.image_range_orderOf hg
-  rw [hord] at himg; conv_lhs => rw [← himg]
-  rw [Finset.sum_image (fun i (hi : i ∈ _) j hj heq => by
-    simp only [Finset.coe_range, Set.mem_Iio] at hi hj
-    rw [IsOfFinOrder.pow_eq_pow_iff_modEq (isOfFinOrder_of_finite g), hord] at heq
-    exact Nat.ModEq.eq_of_lt_of_lt heq hi hj)]
-  simp_rw [show ∀ i, (↑(g ^ i) : ZMod p) ^ l = ((g : ZMod p) ^ l) ^ i from
-    fun i => by simp [← pow_mul, mul_comm]]
-  -- Apply geometric sum formula
-  have hx1 : (g : ZMod p) ^ l ≠ 1 := by
-    intro h; exact hndvd (hord ▸ orderOf_dvd_of_pow_eq_one (Units.ext (by simpa using h)))
-  have hxp := ZMod.pow_card_sub_one_eq_one (pow_ne_zero l (Units.ne_zero g))
-  have := geom_sum_eq hx1 (p - 1)
-  aesop
-
 lemma power_sum_add_indicator_eq_zero (p l : ℕ) (hp : p.Prime) :
     (∑ v ∈ Finset.range p with v ≠ 0, (v : ZMod p) ^ l) +
     (if (p - 1 : ℕ) ∣ l then (1 : ZMod p) else 0) = 0 := by
-  by_cases h : (p - 1) ∣ l
-  · simp only [h, ↓reduceIte]
-    rw [power_sum_eq_neg_one_mod_of_dvd p l hp h]
-    ring
-  · simp only [h, ↓reduceIte, add_zero]
-    haveI : Fact p.Prime := ⟨hp⟩
-    have : (∑ v ∈ Finset.range p with v ≠ 0, (v : ZMod p) ^ l) =
-        ∑ u : (ZMod p)ˣ, (u : ZMod p) ^ l :=
-      Finset.sum_bij'
-        (fun v hv => Units.mk0 (v : ZMod p) (cast_ne_zero_of_mem_filter p v hv))
-        (fun u _ => (u : ZMod p).val)
-        (fun _ _ => Finset.mem_univ _)
-        (fun u _ => by simp [Finset.mem_filter, ZMod.val_lt, ZMod.val_eq_zero, u.ne_zero])
-        (fun v hv => by
-          simp [ZMod.val_cast_of_lt (Finset.mem_range.mp (Finset.mem_filter.mp hv).1)])
-        (fun u _ => Units.ext (ZMod.natCast_zmod_val _))
-        (fun _ _ => rfl)
-    rw [this]
-    exact sum_units_pow_eq_zero_of_not_dvd p l h
+  haveI : Fact p.Prime := ⟨hp⟩
+  have cast_ne : ∀ v, v ∈ (Finset.range p).filter (· ≠ 0) → (v : ZMod p) ≠ 0 := by
+    intro v hv h
+    simp only [Finset.mem_filter, Finset.mem_range] at hv
+    have h1 : (p : ℕ) ∣ v := by simpa [ZMod.natCast_eq_zero_iff] using h
+    exact absurd (Nat.le_of_dvd (by omega) h1) (by omega)
+  have hbij : (∑ v ∈ Finset.range p with v ≠ 0, (v : ZMod p) ^ l) =
+      ∑ u : (ZMod p)ˣ, (u : ZMod p) ^ l :=
+    Finset.sum_bij'
+      (fun v hv => Units.mk0 (v : ZMod p) (cast_ne v hv))
+      (fun u _ => (u : ZMod p).val)
+      (fun _ _ => Finset.mem_univ _)
+      (fun u _ => by simp [Finset.mem_filter, ZMod.val_lt, ZMod.val_eq_zero, u.ne_zero])
+      (fun v hv => by
+        simp [ZMod.val_cast_of_lt (Finset.mem_range.mp (Finset.mem_filter.mp hv).1)])
+      (fun u _ => Units.ext (ZMod.natCast_zmod_val _))
+      (fun _ _ => rfl)
+  rw [hbij, FiniteField.sum_pow_units, ZMod.card]
+  split_ifs <;> ring
 
 lemma is_integer_of_coprime_all_primes (q : ℚ) (h : ∀ p : ℕ, p.Prime → q.den.Coprime p) :
     q ∈ Set.range Int.cast := by
