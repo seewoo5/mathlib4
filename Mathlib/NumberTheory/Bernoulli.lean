@@ -421,29 +421,14 @@ lemma power_sum_eq_neg_one_mod_of_dvd (p l : ℕ) (hp : p.Prime) (hdvd : (p - 1)
 
 lemma sum_pow_eq_sum_units_pow (p l : ℕ) [Fact p.Prime] :
     (∑ v ∈ Finset.range p with v ≠ 0, (v : ZMod p) ^ l) = ∑ u : (ZMod p)ˣ, (u : ZMod p) ^ l := by
-  have hcast := cast_ne_zero_of_mem_filter p
-  refine Finset.sum_bij' (fun v hv => ⟨(v : ZMod p), (v : ZMod p)⁻¹,
-      mul_inv_cancel₀ (hcast v hv), inv_mul_cancel₀ (hcast v hv)⟩)
-    (fun u _ => (u : ZMod p).val) ?_ ?_ ?_ ?_ ?_
-  · intro v hv
-    exact Finset.mem_univ _
-  · intro u _
-    simp only [Finset.mem_filter, Finset.mem_range]
-    constructor
-    · exact ZMod.val_lt (u : ZMod p)
-    · intro h
-      have hu : (u : ZMod p) ≠ 0 := Units.ne_zero u
-      simp only [ZMod.val_eq_zero] at h
-      exact hu h
-  · intro v hv
-    simp only [Finset.mem_filter, Finset.mem_range] at hv
-    have : (v : ZMod p).val = v := ZMod.val_cast_of_lt hv.1
-    simp only [this]
-  · intro u _
-    ext
-    simp only [ZMod.natCast_zmod_val]
-  · intro v _
-    simp
+  refine Finset.sum_bij'
+    (fun v hv => Units.mk0 (↑v) (cast_ne_zero_of_mem_filter p v hv))
+    (fun u _ => (u : ZMod p).val)
+    (fun _ _ => Finset.mem_univ _)
+    (fun u _ => by simp [Finset.mem_filter, ZMod.val_lt, ZMod.val_eq_zero, u.ne_zero])
+    (fun v hv => by simp [ZMod.val_cast_of_lt (Finset.mem_range.mp (Finset.mem_filter.mp hv).1)])
+    (fun u _ => Units.ext (ZMod.natCast_zmod_val _))
+    (fun _ _ => rfl)
 
 lemma generator_orderOf_eq (p : ℕ) [hp : Fact p.Prime] (g : (ZMod p)ˣ)
     (_hg : ∀ x : (ZMod p)ˣ, x ∈ Subgroup.zpowers g) : orderOf g = p - 1 := by
@@ -475,10 +460,8 @@ lemma sum_units_eq_sum_range (p l : ℕ) [hp : Fact p.Prime] (g : (ZMod p)ˣ)
   ext i
   simp [← pow_mul, mul_comm]
 
-lemma generator_pow_ne_one (p l : ℕ) [hp : Fact p.Prime]
-    (hndvd : ¬(p - 1) ∣ l) (g : (ZMod p)ˣ)
-    (hg : ∀ x : (ZMod p)ˣ, x ∈ Subgroup.zpowers g) :
-    (g : ZMod p) ^ l ≠ 1 := by
+lemma generator_pow_ne_one (p l : ℕ) [hp : Fact p.Prime] (hndvd : ¬(p - 1) ∣ l) (g : (ZMod p)ˣ)
+    (hg : ∀ x : (ZMod p)ˣ, x ∈ Subgroup.zpowers g) : (g : ZMod p) ^ l ≠ 1 := by
   have h_order : orderOf g = p - 1 := by
     simp only [orderOf_eq_card_of_forall_mem_zpowers hg, Nat.card_eq_fintype_card, ZMod.card_units]
   intro h
@@ -511,20 +494,7 @@ lemma power_sum_add_indicator_eq_zero (p l : ℕ) (hp : p.Prime) :
   · simp only [h, ↓reduceIte, add_zero]
     exact power_sum_eq_zero_mod_of_not_dvd p l hp h
 
-lemma mem_range_int_cast_iff (q : ℚ) :
-    q ∈ Set.range Int.cast ↔ q.den = 1 := by
-  constructor
-  · intro ⟨z, hz⟩
-    simp only [← hz]
-    norm_cast
-  · intro h
-    use q.num
-    have hq : (q.num : ℚ) / q.den = q := Rat.num_div_den q
-    rw [← hq, h]
-    simp
-
-lemma is_integer_of_coprime_all_primes (q : ℚ)
-    (h : ∀ p : ℕ, p.Prime → q.den.Coprime p) :
+lemma is_integer_of_coprime_all_primes (q : ℚ) (h : ∀ p : ℕ, p.Prime → q.den.Coprime p) :
     q ∈ Set.range Int.cast := by
   have h1 : q.den = 1 := by
     by_contra hne
@@ -729,21 +699,6 @@ lemma pIntegral_pow_div_factor (k m p : ℕ) (hm_lt : m < k) (hp : p.Prime) :
   · omega
   · exact valuation_bound p (2 * d) hp
 
-lemma pIntegral_T1 (k m p : ℕ) (hm_lt : m < k) (hp : p.Prime)
-    (ih : pIntegral p (bernoulli (2 * m) + vonStaudtIndicator (2 * m) p / p)) :
-    pIntegral p ((bernoulli (2 * m) + vonStaudtIndicator (2 * m) p / p) * ((2 * k).choose (2 * m)) *
-                 (p : ℚ) ^ (2*(k-m)) / (2*(k-m) + 1)) := by
-  have h_eq : (bernoulli (2 * m) + vonStaudtIndicator (2 * m) p / p) * ((2 * k).choose (2 * m)) *
-              (p : ℚ) ^ (2*(k-m)) / (2*(k-m) + 1) =
-              ((bernoulli (2 * m) + vonStaudtIndicator (2 * m) p / p) * ((2 * k).choose (2 * m))) *
-              ((p : ℚ) ^ (2*(k-m)) / (2*(k-m) + 1)) := by ring
-  rw [h_eq]
-  apply pIntegral_mul
-  · apply pIntegral_mul
-    · exact ih
-    · exact pIntegral_of_int p ((2 * k).choose (2 * m))
-  · exact pIntegral_pow_div_factor k m p hm_lt hp
-
 lemma valuation_three_le_one (p : ℕ) (hp : p.Prime) : (3 : ℕ).factorization p ≤ 1 := by
   rcases hp.eq_two_or_odd with rfl | hp_odd
   · exact valuation_bound_d_plus_1_p2_d2
@@ -770,36 +725,6 @@ lemma valuation_bound_2d_plus_1 (p d : ℕ) (hp : p.Prime) (hd : d ≥ 1) :
     calc 2 * d + 1 ≤ 2 ^ (2 * d - 1) := two_d_plus_one_le_pow_two d hd2
       _ ≤ p ^ (2 * d - 1) := Nat.pow_le_pow_left hp.two_le _
 
-lemma pIntegral_T2 (k m p : ℕ) (hm_lt : m < k) (hp : p.Prime) :
-    pIntegral p (vonStaudtIndicator (2 * m) p * ((2 * k).choose (2 * m)) * (p : ℚ) ^ (2*(k-m) - 1) /
-                 (2*(k-m) + 1)) := by
-  set d := k - m with hd_def
-  have hd_pos : d ≥ 1 := by omega
-  unfold vonStaudtIndicator
-  split_ifs with he
-  · simp only [one_mul]
-    have hd_eq : (2 : ℚ) * (↑k - ↑m) + 1 = ↑(2 * d + 1) := by
-      simp only [hd_def]
-      have hkm : m ≤ k := le_of_lt hm_lt
-      rw [← Nat.cast_sub hkm]
-      push_cast
-      ring
-    rw [hd_eq]
-    have hN_ne_zero : (2 * d + 1 : ℕ) ≠ 0 := by omega
-    have hvaluation : (2 * d + 1).factorization p ≤ 2 * d - 1 :=
-      valuation_bound_2d_plus_1 p d hp hd_pos
-    have h_pow_pIntegral : pIntegral p ((p : ℚ) ^ (2 * d - 1) / ↑(2 * d + 1)) :=
-      pIntegral_pow_div p (2 * d + 1) (2 * d - 1) hp hN_ne_zero hvaluation
-    have h_rw :
-        (↑((2 * k).choose (2 * m)) : ℚ) * ↑p ^ (2 * d - 1) / ↑(2 * d + 1) =
-        (↑((2 * k).choose (2 * m)) : ℚ) *
-          (↑p ^ (2 * d - 1) / ↑(2 * d + 1)) := by ring
-    rw [h_rw]
-    exact pIntegral_int_mul p ((p : ℚ) ^ (2 * d - 1) / ↑(2 * d + 1))
-      ((2 * k).choose (2 * m)) h_pow_pIntegral
-  · simp only [zero_mul, zero_div]
-    exact pIntegral_of_int p 0
-
 lemma core_algebraic_identity (B I : ℚ) (p d : ℕ) (hd : d ≥ 1) :
     B * (p : ℚ) ^ (2*d) = (B + I / p) * (p : ℚ) ^ (2*d) - I * (p : ℚ) ^ (2*d - 1) := by
   have hpow : (p : ℚ) ^ (2*d) = (p : ℚ) ^ (2*d - 1) * p := by
@@ -807,23 +732,6 @@ lemma core_algebraic_identity (B I : ℚ) (p d : ℕ) (hd : d ≥ 1) :
   rcases eq_or_ne (p : ℚ) 0 with hp | hp
   · simp [hp, zero_pow (show 2 * d - 1 ≠ 0 from by omega)]
   · rw [hpow]; field_simp [hp]; ring
-
-lemma even_term_eq_T1_sub_T2 (k m p : ℕ) (hm_lt : m < k) :
-    (bernoulli (2 * m) * ((2 * k).choose (2 * m)) * (p : ℚ) ^ (2*(k-m)) / (2*(k-m) + 1) : ℚ) =
-    (bernoulli (2 * m) + vonStaudtIndicator (2 * m) p / p) * ((2 * k).choose (2 * m)) *
-                 (p : ℚ) ^ (2*(k-m)) / (2*(k-m) + 1) -
-    vonStaudtIndicator (2 * m) p * ((2 * k).choose (2 * m)) *
-      (p : ℚ) ^ (2*(k-m) - 1) / (2*(k-m) + 1) := by
-  have h := core_algebraic_identity (bernoulli (2 * m)) (vonStaudtIndicator (2 * m) p) p (k - m)
-    (by omega)
-  set C := ((2 * k).choose (2 * m) : ℚ)
-  set N := (2 * (k - m) + 1 : ℚ)
-  calc bernoulli (2 * m) * C * (p : ℚ) ^ (2*(k-m)) / N
-      = (bernoulli (2 * m) * (p : ℚ) ^ (2*(k-m))) * C / N := by ring
-    _ = ((bernoulli (2 * m) + vonStaudtIndicator (2 * m) p / p) * (p : ℚ) ^ (2*(k-m)) -
-         vonStaudtIndicator (2 * m) p * (p : ℚ) ^ (2*(k-m) - 1)) * C / N := by rw [h]
-    _ = (bernoulli (2 * m) + vonStaudtIndicator (2 * m) p / p) * C * (p : ℚ) ^ (2*(k-m)) / N -
-        vonStaudtIndicator (2 * m) p * C * (p : ℚ) ^ (2*(k-m) - 1) / N := by ring
 
 lemma pIntegral_i1_term_in_sum (k p : ℕ) (hk : k > 0) (hp : p.Prime) :
     pIntegral p (bernoulli 1 * ((2 * k + 1).choose 1) * (p : ℚ) ^ (2 * k - 1) / (2 * k + 1)) := by
@@ -1127,6 +1035,9 @@ lemma von_staudt_coprime_all_primes_pos (k p : ℕ) (hk : k > 0) (hp : p.Prime) 
     ((bernoulli_plus_indicator_coprime_p_pos k p hk hp).mul_left
       (sum_other_primes_coprime_p_pos k p hp))
 
+/-- **von Staudt-Clausen theorem:** For any natural number $k$, the sum
+$$B_{2k} + \sum_{p - 1 \mid 2k} \frac{1}{p}$$ is an integer.
+-/
 theorem von_staudt_clausen (k : ℕ) :
     bernoulli (2 * k) + ∑ p ∈ Finset.range (2 * k + 2) with p.Prime ∧ (p - 1) ∣ 2 * k,
       (1 : ℚ) / p ∈ Set.range Int.cast := by
