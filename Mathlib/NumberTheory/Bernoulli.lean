@@ -418,8 +418,7 @@ lemma generator_orderOf_eq (p : ℕ) [hp : Fact p.Prime] (g : (ZMod p)ˣ)
   have h3 : Fintype.card (ZMod p)ˣ = p - 1 := ZMod.card_units p
   aesop
 
-lemma sum_units_pow_eq_zero_of_not_dvd (p l : ℕ) [hp : Fact p.Prime]
-    (hndvd : ¬(p - 1) ∣ l) :
+lemma sum_units_pow_eq_zero_of_not_dvd (p l : ℕ) [hp : Fact p.Prime] (hndvd : ¬(p - 1) ∣ l) :
     (∑ u : (ZMod p)ˣ, (u : ZMod p) ^ l) = 0 := by
   haveI : IsCyclic (ZMod p)ˣ := ZMod.isCyclic_units_prime hp.out
   obtain ⟨g, hg⟩ := IsCyclic.exists_generator (α := (ZMod p)ˣ)
@@ -631,8 +630,8 @@ lemma pow_ge_succ_of_ge_three (p d : ℕ) (hp : 3 ≤ p) (hd : d ≥ 2) : d + 1 
   exact h2 d hd
 
 lemma core_algebraic_identity (B I : ℚ) (p d : ℕ) (hd : d ≥ 1) :
-    B * (p : ℚ) ^ (2*d) = (B + I / p) * (p : ℚ) ^ (2*d) - I * (p : ℚ) ^ (2*d - 1) := by
-  have hpow : (p : ℚ) ^ (2*d) = (p : ℚ) ^ (2*d - 1) * p := by
+    B * (p : ℚ) ^ (2 * d) = (B + I / p) * (p : ℚ) ^ (2 * d) - I * (p : ℚ) ^ (2 * d - 1) := by
+  have hpow : (p : ℚ) ^ (2 * d) = (p : ℚ) ^ (2 * d - 1) * p := by
     conv_lhs => rw [show 2 * d = (2 * d - 1) + 1 from by omega, pow_succ]
   rcases eq_or_ne (p : ℚ) 0 with hp | hp
   · simp [hp, zero_pow (show 2 * d - 1 ≠ 0 from by omega)]
