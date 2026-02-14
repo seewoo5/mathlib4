@@ -769,18 +769,20 @@ lemma bernoulli_plus_indicator_rearrangement (k p : ℕ) (hk : k > 0) (hp : p.Pr
   use T
   have hT' : (∑ v ∈ Finset.range p with v ≠ 0, (v : ℚ) ^ (2 * k)) +
       vonStaudtIndicator (2 * k) p = p * T := by
-    have h1 : ((∑ v ∈ Finset.range p with v ≠ 0, (v : ℤ) ^ (2 * k)) : ℚ) =
+    have hsum : ((∑ v ∈ Finset.range p with v ≠ 0, (v : ℤ) ^ (2 * k)) : ℚ) =
         ∑ v ∈ Finset.range p with v ≠ 0, (v : ℚ) ^ (2 * k) := by norm_cast
-    have h2 : ((if (p - 1 : ℕ) ∣ (2 * k) then (1 : ℤ) else (0 : ℤ)) : ℚ) =
+    have hind : ((if (p - 1 : ℕ) ∣ (2 * k) then (1 : ℤ) else (0 : ℤ)) : ℚ) =
         vonStaudtIndicator (2 * k) p := by
-      split_ifs at * <;> simp_all [vonStaudtIndicator]
-    have h4 : ((∑ v ∈ Finset.range p with v ≠ 0, (v : ℤ) ^ (2 * k)) : ℚ) +
+      by_cases hd : (p - 1 : ℕ) ∣ (2 * k) <;> simp [vonStaudtIndicator, hd]
+    have hTq : ((∑ v ∈ Finset.range p with v ≠ 0, (v : ℤ) ^ (2 * k)) : ℚ) +
         ((if (p - 1 : ℕ) ∣ (2 * k) then (1 : ℤ) else (0 : ℤ)) : ℚ) = (p : ℚ) * T := by
       norm_cast at hT ⊢
-    calc (∑ v ∈ Finset.range p with v ≠ 0, (v : ℚ) ^ (2 * k)) + vonStaudtIndicator (2 * k) p =
-        ((∑ v ∈ Finset.range p with v ≠ 0, (v : ℤ) ^ (2 * k)) : ℚ) +
-        ((if (p - 1 : ℕ) ∣ (2 * k) then (1 : ℤ) else (0 : ℤ)) : ℚ) := by rw [h1, h2]
-      _ = (p : ℚ) * T := by rw [h4]
+    calc
+      (∑ v ∈ Finset.range p with v ≠ 0, (v : ℚ) ^ (2 * k)) + vonStaudtIndicator (2 * k) p =
+          ((∑ v ∈ Finset.range p with v ≠ 0, (v : ℤ) ^ (2 * k)) : ℚ) +
+            ((if (p - 1 : ℕ) ∣ (2 * k) then (1 : ℤ) else (0 : ℤ)) : ℚ) := by
+            rw [← hsum, ← hind]
+      _ = (p : ℚ) * T := by exact hTq
       _ = p * T := by simp
   have hFaul : (∑ v ∈ Finset.range p with v ≠ 0, (v : ℚ) ^ (2 * k)) =
                (∑ i ∈ Finset.range (2 * k), bernoulli i * ((2 * k + 1).choose i) *
