@@ -49,10 +49,20 @@ This formula is true for all $n$ and in particular $B_0=1$. Note that this is th
 for positive Bernoulli numbers, which we call `bernoulli'`. The negative Bernoulli numbers are
 then defined as `bernoulli := (-1)^n * bernoulli'`.
 
+The proof of von Staudt-Clausen's theorem follows Rado's JLMS 1934 paper
+"A New Proof of a Theorem of v. Staudt"
+
 ## Main theorems
 
-`sum_bernoulli : ∑ k ∈ Finset.range n, (n.choose k : ℚ) * bernoulli k =
+* `sum_bernoulli : ∑ k ∈ Finset.range n, (n.choose k : ℚ) * bernoulli k =
   if n = 1 then 1 else 0`
+* `von_staudt_clausen : bernoulli (2 * k) + ∑ p ∈ Finset.range (2 * k + 2)
+  with p.Prime ∧ (p - 1) ∣ 2 * k, (1 : ℚ) / p ∈ Set.range Int.cast `
+
+## References
+
+* https://en.wikipedia.org/wiki/Bernoulli_number
+* [R. Rado, *A New Proof of a Theorem of v. Staudt*][Rado1934]
 -/
 
 
@@ -390,10 +400,17 @@ end Faulhaber
 
 section vonStaudtClausen
 
+/-!
+Here we formalize Rado's proof of von Staudt-Clausen's theorem, which states that for any $k \ge 0$,
+$$B_{2k} + \sum_{p \text{ prime}, (p - 1) \mid 2k} \frac{1}{p} \in \mathbb{Z}.$$
+Rado's proof is based on Faulhaber's theorem and induction on $k$.
+-/
+
 /-- Indicator function that is `1` if `(p - 1) ∣ k` and `0` otherwise. -/
 noncomputable def vonStaudtIndicator (k p : ℕ) : ℚ :=
   if (p - 1 : ℕ) ∣ k then 1 else 0
 
+/-- Over `ZMod p`, the nonzero `l`-th power sum equals the negative indicator of `(p - 1) ∣ l`. -/
 lemma power_sum_add_indicator_eq_zero (p l : ℕ) (hp : p.Prime) :
     (∑ v ∈ Finset.range p with v ≠ 0, (v : ZMod p) ^ l) +
     (if (p - 1 : ℕ) ∣ l then (1 : ZMod p) else 0) = 0 := by
@@ -417,6 +434,7 @@ lemma power_sum_add_indicator_eq_zero (p l : ℕ) (hp : p.Prime) :
   rw [hbij, FiniteField.sum_pow_units, ZMod.card]
   split_ifs <;> ring
 
+/-- If a rational number is $p$-integral for all primes $p$, then it is an integer. -/
 lemma is_integer_of_coprime_all_primes (q : ℚ) (h : ∀ p : ℕ, p.Prime → q.den.Coprime p) :
     q ∈ Set.range Int.cast := by
   have h1 : q.den = 1 := by
@@ -465,6 +483,8 @@ lemma pIntegral_sub (p : ℕ) (x y : ℚ) (hx : pIntegral p x) (hy : pIntegral p
     pIntegral p (x - y) :=
   Nat.Coprime.coprime_dvd_left (Rat.sub_den_dvd x y) (Nat.Coprime.mul_left hx hy)
 
+/-- Denominators of the "other primes" part of the indicator sum
+stay coprime to a fixed prime `p`. -/
 lemma prod_den_coprime_p (k p : ℕ) (hp : p.Prime) :
     (∏ q ∈ Finset.range (2 * k + 2) with q.Prime ∧ (q - 1) ∣ 2 * k ∧ q ≠ p,
       ((1 : ℚ) / q).den).Coprime p := by
@@ -475,6 +495,8 @@ lemma prod_den_coprime_p (k p : ℕ) (hp : p.Prime) :
   rw [h2]
   exact (Nat.coprime_primes h1 hp).mpr (Finset.mem_filter.mp hq).2.2.2
 
+/-- Splits the prime-indexed correction sum into the `p`-term (`vonStaudtIndicator / p`)
+plus the rest. -/
 lemma sum_primes_eq_indicator_add_rest (k p : ℕ) (hk : k > 0) (hp : p.Prime) :
     (∑ q ∈ Finset.range (2 * k + 2) with q.Prime ∧ (q - 1) ∣ 2 * k, (1 : ℚ) / q) =
     vonStaudtIndicator (2 * k) p / p + ∑ q ∈ Finset.range (2 * k + 2) with
@@ -495,6 +517,7 @@ lemma sum_primes_eq_indicator_add_rest (k p : ℕ) (hk : k > 0) (hp : p.Prime) :
       ⟨fun ⟨hpr, hd⟩ => ⟨hpr, hd, fun h => hdvd (h ▸ hd)⟩,
        fun ⟨hpr, hd, _⟩ => ⟨hpr, hd⟩⟩) fun _ _ => rfl
 
+/-- If the `p`-adic valuation of `M` is at most `N`, then `p^N / M` is `p`-integral. -/
 lemma pIntegral_pow_div (p M N : ℕ) (hp : p.Prime) (hM : M ≠ 0)
     (hv : M.factorization p ≤ N) : pIntegral p ((p : ℚ)^N / M) := by
   set e := M.factorization p
@@ -518,12 +541,14 @@ lemma pIntegral_pow_div (p M N : ℕ) (hp : p.Prime) (hM : M ≠ 0)
     exact Int.natCast_dvd_natCast.mp (Rat.den_dvd _ _)
   exact hM'_cop.coprime_dvd_left hdvd
 
+/-- Basic valuation bound used for the `i = 0` term in the Faulhaber expansion. -/
 lemma valuation_bound (p n : ℕ) (hp : p.Prime) : (n + 1).factorization p ≤ n :=
   Nat.factorization_le_of_le_pow <|
     calc n + 1 = (n + 1).choose 1 := by simp
       _ ≤ 2 ^ n := Nat.choose_succ_le_two_pow n 1
       _ ≤ p ^ n := Nat.pow_le_pow_left hp.two_le n
 
+/-- The `i = 0` Faulhaber term is `p`-integral. -/
 lemma pIntegral_i0_term (k p : ℕ) (hk : k > 0) (hp : p.Prime) :
     pIntegral p ((p : ℚ) ^ (2 * k) / (2 * k + 1)) := by
   have h : (2 * k + 1 : ℚ) = ↑(2 * k + 1) := by push_cast; ring
@@ -532,6 +557,7 @@ lemma pIntegral_i0_term (k p : ℕ) (hk : k > 0) (hp : p.Prime) :
   · omega
   · exact valuation_bound p (2 * k) hp
 
+/-- The `i = 1` Faulhaber term is `p`-integral (handled separately for `p = 2` and odd `p`). -/
 lemma pIntegral_i1_term (k p : ℕ) (hk : k > 0) (hp : p.Prime) :
     pIntegral p (bernoulli 1 * (2 * k) * (p : ℚ) ^ (2 * k - 1) / (2 * k)) := by
   obtain rfl | hp2 := eq_or_ne p 2
@@ -553,9 +579,11 @@ lemma pIntegral_i1_term (k p : ℕ) (hk : k > 0) (hp : p.Prime) :
       exact Int.natCast_dvd_natCast.mp (Rat.den_dvd _ _)
     exact Nat.Coprime.of_dvd_left hdvd (Odd.coprime_two_left (hp.odd_of_ne_two hp2))
 
+/-- The exceptional base case of the inequality argument (`p = 2`, `d = 2`). -/
 lemma valuation_bound_d_plus_1_p2_d2 : (2 + 1).factorization 2 ≤ 2 - 1 := by
   simp [Nat.factorization_eq_zero_of_not_dvd (show ¬(2 ∣ 3) by decide)]
 
+/-- Auxiliary growth inequality: for `d ≥ 3`, we have `d + 1 ≤ 2^(d - 1)`. -/
 lemma pow_two_ge_succ_of_ge_three (d : ℕ) (hd : d ≥ 3) : d + 1 ≤ 2 ^ (d - 1) := by
   have h : ∀ n : ℕ, n ≥ 3 → n + 1 ≤ 2 ^ (n - 1) := by
     intro n hn
@@ -569,6 +597,7 @@ lemma pow_two_ge_succ_of_ge_three (d : ℕ) (hd : d ≥ 3) : d + 1 ≤ 2 ^ (d - 
         _ = 2 ^ m := by conv_rhs => rw [show m = m - 1 + 1 from by omega]; exact pow_succ ..
   exact h d hd
 
+/-- Auxiliary growth inequality: for `p ≥ 3` and `d ≥ 2`, we have `d + 1 ≤ p^(d - 1)`. -/
 lemma pow_ge_succ_of_ge_three (p d : ℕ) (hp : 3 ≤ p) (hd : d ≥ 2) : d + 1 ≤ p ^ (d - 1) := by
   have h2 : ∀ d : ℕ, d ≥ 2 → d + 1 ≤ p ^ (d - 1) := by
     intro d hd
@@ -584,6 +613,7 @@ lemma pow_ge_succ_of_ge_three (p d : ℕ) (hp : 3 ≤ p) (hd : d ≥ 2) : d + 1 
           conv_rhs => rw [show m = m - 1 + 1 from by omega]; exact pow_succ ..
   exact h2 d hd
 
+/-- Main valuation estimate behind the contradiction step for even-index summands. -/
 lemma valuation_bound_d_plus_1 (p d : ℕ) (hp : p.Prime) (hd : d ≥ 2) :
     (d + 1).factorization p ≤ d - 1 := by
   obtain hp2 | hp3 := hp.eq_two_or_odd
@@ -599,6 +629,7 @@ lemma valuation_bound_d_plus_1 (p d : ℕ) (hp : p.Prime) (hd : d ≥ 2) :
       omega
     · exact hd
 
+/-- Rewrites the binomial coefficient denominator exactly as in Rado's summand. -/
 lemma choose_div_core (k m : ℕ) (hm_lt : m < k) :
     ((2 * k + 1).choose (2 * m) : ℚ) / (2 * k + 1) =
     ((2 * k).choose (2 * m) : ℚ) / (2 * k - 2 * m + 1) := by
@@ -615,6 +646,7 @@ lemma choose_div_core (k m : ℕ) (hm_lt : m < k) :
   rw [div_eq_div_iff hk_pos hd_pos]
   exact_mod_cast (Nat.choose_mul_succ_eq (2 * k) (2 * m)).symm
 
+/-- Multiplicative form of `choose_div_core`, used to move factors around in the even case. -/
 lemma choose_div_simplify (k m : ℕ) (x : ℚ) (hm_lt : m < k) :
     ((2 * k + 1).choose (2 * m) : ℚ) * x / (2 * k + 1) =
     ((2 * k).choose (2 * m) : ℚ) * x / (2 * k - 2 * m + 1) := by
@@ -622,6 +654,7 @@ lemma choose_div_simplify (k m : ℕ) (x : ℚ) (hm_lt : m < k) :
   rw [mul_comm ((2 * k + 1).choose (2 * m) : ℚ) x, mul_div_assoc,
       mul_comm ((2 * k).choose (2 * m) : ℚ) x, mul_div_assoc, h]
 
+/-- `p`-integrality of the core even-index summand after denominator normalization. -/
 lemma pIntegral_case_one (k m p : ℕ) (hm_lt : m < k) (hp : p.Prime) (hd : 2 * k - 2 * m ≥ 2) :
     pIntegral p (((2 * k).choose (2 * m) : ℚ) * (p : ℚ) ^ (2 * k - 2 * m - 1) /
       (2 * k - 2 * m + 1)) := by
@@ -639,6 +672,8 @@ lemma pIntegral_case_one (k m p : ℕ) (hm_lt : m < k) (hp : p.Prime) (hd : 2 * 
   rw [h_eq]
   exact pIntegral_int_mul p _ _ h_pow_integral
 
+/-- Uses the induction hypothesis on `B_{2m} + e_{2m}(p)/p`
+to prove `p`-integrality of the even term. -/
 lemma pIntegral_even_term_in_sum (k m p : ℕ) (hm_lt : m < k)
     (hp : p.Prime) (ih : pIntegral p (bernoulli (2 * m) + vonStaudtIndicator (2 * m) p / p)) :
     pIntegral p (bernoulli (2 * m) * ((2 * k + 1).choose (2 * m)) *
@@ -696,6 +731,7 @@ lemma pIntegral_even_term_in_sum (k m p : ℕ) (hm_lt : m < k)
       rw [Rat.den_zero]
       exact Nat.coprime_one_left_iff p |>.mpr trivial
 
+/-- The full remainder sum in Faulhaber's formula is `p`-integral. -/
 lemma pIntegral_remainder (k p : ℕ) (hk : k > 0) (hp : p.Prime)
     (ih : ∀ m, 0 < m → m < k → pIntegral p (bernoulli (2 * m) + vonStaudtIndicator (2 * m) p / p)) :
     pIntegral p (∑ i ∈ Finset.range (2 * k),
@@ -721,6 +757,8 @@ lemma pIntegral_remainder (k p : ℕ) (hk : k > 0) (hp : p.Prime)
       simp only [Rat.den_zero]
       exact Nat.coprime_one_left_iff p |>.mpr trivial
 
+/-- Rearranges the Faulhaber identity and power-sum congruence to isolate
+`bernoulli (2*k) + vonStaudtIndicator (2*k) p / p`. -/
 lemma bernoulli_plus_indicator_rearrangement (k p : ℕ) (hk : k > 0) (hp : p.Prime) :
     ∃ T : ℤ, bernoulli (2 * k) + vonStaudtIndicator (2 * k) p / p =
       T - (∑ i ∈ Finset.range (2 * k),
@@ -796,6 +834,7 @@ lemma bernoulli_plus_indicator_rearrangement (k p : ℕ) (hk : k > 0) (hp : p.Pr
     exact Finset.sum_congr rfl fun i hi => h1 i hi
   exact_mod_cast h0
 
+/-- For fixed prime `p`, the denominator of `B_{2k} + e_{2k}(p)/p` is coprime to `p`. -/
 lemma bernoulli_plus_indicator_coprime_p_pos (k p : ℕ) (hk : k > 0) (hp : p.Prime) :
     (bernoulli (2 * k) + vonStaudtIndicator (2 * k) p / p).den.Coprime p := by
   induction k using Nat.strong_induction_on with
@@ -810,6 +849,7 @@ lemma bernoulli_plus_indicator_coprime_p_pos (k p : ℕ) (hk : k > 0) (hp : p.Pr
       exact ih m hm_lt hm_pos
     exact pIntegral_sub p T _ hT_int hR
 
+/-- Extends the fixed-prime coprimality result to the full prime correction sum. -/
 lemma von_staudt_coprime_all_primes_pos (k p : ℕ) (hk : k > 0) (hp : p.Prime) :
     (bernoulli (2 * k) + ∑ q ∈ Finset.range (2 * k + 2) with
       q.Prime ∧ (q - 1) ∣ 2 * k, (1 : ℚ) / q).den.Coprime p := by
