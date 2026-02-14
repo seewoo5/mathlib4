@@ -584,14 +584,6 @@ lemma pow_ge_succ_of_ge_three (p d : ℕ) (hp : 3 ≤ p) (hd : d ≥ 2) : d + 1 
           conv_rhs => rw [show m = m - 1 + 1 from by omega]; exact pow_succ ..
   exact h2 d hd
 
-lemma core_algebraic_identity (B I : ℚ) (p d : ℕ) (hd : d ≥ 1) :
-    B * (p : ℚ) ^ (2 * d) = (B + I / p) * (p : ℚ) ^ (2 * d) - I * (p : ℚ) ^ (2 * d - 1) := by
-  have hpow : (p : ℚ) ^ (2 * d) = (p : ℚ) ^ (2 * d - 1) * p := by
-    conv_lhs => rw [show 2 * d = (2 * d - 1) + 1 from by omega, pow_succ]
-  rcases eq_or_ne (p : ℚ) 0 with hp | hp
-  · simp [hp, zero_pow (show 2 * d - 1 ≠ 0 from by omega)]
-  · rw [hpow]; field_simp [hp]; ring
-
 lemma valuation_bound_d_plus_1 (p d : ℕ) (hp : p.Prime) (hd : d ≥ 2) :
     (d + 1).factorization p ≤ d - 1 := by
   obtain hp2 | hp3 := hp.eq_two_or_odd
@@ -659,8 +651,14 @@ lemma pIntegral_even_term_in_sum (k m p : ℕ) (hm_lt : m < k)
     vonStaudtIndicator (2 * m) p * ((2 * k + 1).choose (2 * m)) *
       (p : ℚ) ^ (2 * k - 2 * m - 1) / (2 * k + 1) := by
     simp only [show 2 * k - 2 * m = 2 * (k - m) from by omega]
-    have h := core_algebraic_identity (bernoulli (2 * m))
-      (vonStaudtIndicator (2 * m) p) p (k - m) (by omega)
+    have h : bernoulli (2 * m) * (p : ℚ) ^ (2 * (k - m)) =
+        (bernoulli (2 * m) + vonStaudtIndicator (2 * m) p / p) * (p : ℚ) ^ (2 * (k - m)) -
+          vonStaudtIndicator (2 * m) p * (p : ℚ) ^ (2 * (k - m) - 1) := by
+      have hpow : (p : ℚ) ^ (2 * (k - m)) = (p : ℚ) ^ (2 * (k - m) - 1) * p := by
+        conv_lhs => rw [show 2 * (k - m) = (2 * (k - m) - 1) + 1 from by omega, pow_succ]
+      rcases eq_or_ne (p : ℚ) 0 with hp0 | hp0
+      · simp [hp0, zero_pow (show 2 * (k - m) - 1 ≠ 0 from by omega)]
+      · rw [hpow]; field_simp [hp0]; ring
     set C := ((2 * k + 1).choose (2 * m) : ℚ)
     set N := (2 * k + 1 : ℚ)
     calc bernoulli (2 * m) * C * (p : ℚ) ^ (2 * (k - m)) / N
