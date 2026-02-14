@@ -453,6 +453,8 @@ lemma is_integer_of_coprime_all_primes (q : ℚ) (h : ∀ p : ℕ, p.Prime → q
 /-- A rational number `x` is `p`-integral if `p` does not divide its denominator. -/
 def pIntegral (p : ℕ) (x : ℚ) : Prop := x.den.Coprime p
 
+@[simp] lemma pIntegral_zero (p : ℕ) : pIntegral p (0 : ℚ) := by simp [pIntegral]
+
 lemma sum_den_dvd_prod_den {ι : Type*} (s : Finset ι) (f : ι → ℚ) :
     (∑ i ∈ s, f i).den ∣ ∏ i ∈ s, (f i).den := by
   classical
@@ -727,9 +729,7 @@ lemma pIntegral_even_term_in_sum (k m p : ℕ) (hm_lt : m < k)
     · simp only [one_mul]
       rw [choose_div_simplify k m _ hm_lt]
       exact pIntegral_case_one k m p hm_lt hp (by omega)
-    · simp only [zero_mul, zero_div]; unfold pIntegral
-      rw [Rat.den_zero]
-      exact Nat.coprime_one_left_iff p |>.mpr trivial
+    · simp
 
 /-- The full remainder sum in Faulhaber's formula is `p`-integral. -/
 lemma pIntegral_remainder (k p : ℕ) (hk : k > 0) (hp : p.Prime)
@@ -751,11 +751,7 @@ lemma pIntegral_remainder (k p : ℕ) (hk : k > 0) (hp : p.Prime)
     · have ⟨_, hm_lt, hj_eq⟩ : m ≥ 1 ∧ m < k ∧ j = 2 * m := by omega
       simp only [hj_eq]
       exact pIntegral_even_term_in_sum k m p hm_lt hp (ih m (by omega) hm_lt)
-    · simp only [bernoulli_eq_zero_of_odd hodd (by rcases hodd with ⟨r, hr⟩; omega),
-        zero_mul, zero_div]
-      unfold pIntegral
-      simp only [Rat.den_zero]
-      exact Nat.coprime_one_left_iff p |>.mpr trivial
+    · simp [bernoulli_eq_zero_of_odd hodd (by rcases hodd with ⟨r, hr⟩; omega)]
 
 /-- Rearranges the Faulhaber identity and power-sum congruence to isolate
 `bernoulli (2*k) + vonStaudtIndicator (2*k) p / p`. -/
@@ -800,11 +796,7 @@ lemma bernoulli_plus_indicator_rearrangement (k p : ℕ) (hk : k > 0) (hp : p.Pr
       rw [Finset.sum_filter]
     rw [← hfilter]
     simp only [sum_range_pow]; push_cast
-    have hsplit : Finset.range (2 * k + 1) = Finset.range (2 * k) ∪ {2 * k} := by
-      ext x; simp [Finset.mem_range]; omega
-    have hdisjoint : Disjoint (Finset.range (2 * k)) ({2 * k} : Finset ℕ) := by
-      simp [Finset.disjoint_left]; omega
-    rw [hsplit, Finset.sum_union hdisjoint, Finset.sum_singleton]
+    rw [Finset.sum_range_succ]
     congr 1
     have h1 : (2 * k + 1).choose (2 * k) = 2 * k + 1 := by
       rw [← Nat.choose_symm_of_eq_add (by omega : 2 * k + 1 = 1 + 2 * k), Nat.choose_one_right]
