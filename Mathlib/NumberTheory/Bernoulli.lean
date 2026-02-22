@@ -859,11 +859,7 @@ theorem von_staudt_clausen (k : ℕ) :
     bernoulli (2 * k) + ∑ p ∈ Finset.range (2 * k + 2) with p.Prime ∧ (p - 1) ∣ 2 * k,
       (1 : ℚ) / p ∈ Set.range Int.cast := by
   rcases Nat.eq_zero_or_pos k with rfl | hk
-  · have h1 : bernoulli (2 * 0) = 1 := by norm_num [bernoulli_zero]
-    have h2 : ∑ p ∈ Finset.range (2 * 0 + 2) with
-        p.Prime ∧ (p - 1) ∣ 2 * 0, (1 : ℚ) / p = 0 := by norm_num; decide
-    rw [h1, h2]
-    exact ⟨1, by norm_num⟩
+  · exact ⟨1, by decide +kernel⟩
   · exact is_integer_of_coprime_all_primes _
       (fun p hp => von_staudt_coprime_all_primes_pos k p hk hp)
 
